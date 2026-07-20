@@ -1,0 +1,141 @@
+# rebuild-prompt
+
+A [Claude Code](https://claude.com/claude-code) skill that turns a rough,
+half-formed prompt into a polished, ready-to-paste prompt — with the right
+skills and agents already routed to each task.
+
+It does **not** run the prompt. It hands you one you can paste into a fresh
+session yourself.
+
+## The problem
+
+You have dozens of skills installed. You type "make my dashboard less
+generic and check the performance" and get a generic response, because
+nothing routed that to the dedicated data-viz skill, the de-slop skill, and
+a performance-benchmarking agent.
+
+The capability was installed. It just never got picked.
+
+## What it does
+
+Given a rough prompt, `rebuild-prompt`:
+
+1. **Decomposes** it into ordered tasks with dependencies.
+2. **Shortlists 2–3 real candidate skills/agents per task** — ranked, each
+   with *why it ranked there*, including why the runners-up lost.
+3. **Lets you choose** which capability runs each task.
+4. **Returns a finished prompt** with your chosen skills embedded per task,
+   success criteria written in, and any unresolved scope marked inline.
+
+The shortlist step is the point. Routing decisions made silently are
+routing decisions you can't overrule.
+
+## Example
+
+**In:**
+
+```
+this app feels slow and the UI looks kind of boring, can you fix it up
+```
+
+**Out:**
+
+```
+The <project> dashboard has two problems, in order.
+
+Context: the slowness hasn't been isolated yet — diagnose before assuming.
+
+## Task 1 — Diagnose and fix performance
+Dispatch the Performance Benchmarker agent.
+Profile the app first (load/render vs. action/data-layer) rather than
+guessing the category. Report what was slow and what changed, with
+before/after numbers.
+
+## Task 2 — De-genericize the UI   (after Task 1)
+Use /kill-ai-slop.
+The app currently reads as visually generic. Remove the tells without
+touching the performance fix from Task 1.
+
+Done = profiling data shows the bottleneck fixed with before/after
+numbers, and the UI no longer reads as templated.
+```
+
+...plus a table showing which capabilities were considered and why each was
+picked or passed over.
+
+## Install
+
+Clone into your personal skills directory:
+
+```bash
+git clone https://github.com/vignesh2699v/claude-rebuild-prompt.git /tmp/claude-rebuild-prompt
+mkdir -p ~/.claude/skills
+cp -r /tmp/claude-rebuild-prompt/skills/rebuild-prompt ~/.claude/skills/
+```
+
+Or for a single project only, copy into that project's `.claude/skills/`
+instead.
+
+No build step, no dependencies — it's markdown. Claude Code discovers it on
+the next session.
+
+Verify it registered:
+
+```bash
+ls ~/.claude/skills/rebuild-prompt
+# SKILL.md  reference/
+```
+
+## Usage
+
+```
+/rebuild-prompt <your rough prompt>
+```
+
+You'll get a shortlist of candidate capabilities per task, pick one for
+each, then receive the finished prompt.
+
+It also activates on natural phrasing like "rebuild this prompt", "polish
+this prompt", or "add the right skills to this".
+
+## Built-in defaults
+
+- **Code-writing tasks** get an automatic code-review + verification pass
+  appended — you don't have to remember to ask.
+- **Plan/spec tasks** are routed to render as an interactive HTML document
+  with click-to-comment sections, instead of a bare `.md` file, so review
+  comments become plan revisions.
+- **Verification-shaped work** ("check this", "confirm it works") routes to
+  a subagent rather than a generic skill.
+
+Both standing rules name specific skills (`/code-review`, `/verify`, and a
+commentable-preview skill). Each is applied **only if installed**, with a
+documented fallback otherwise — the skill degrades gracefully in any
+environment.
+
+## Requirements
+
+- Claude Code (any recent version — nested `.claude/skills/` discovery).
+- No runtime dependencies. No `npm install`, no `pip install`.
+- Routes against whatever skills, agents, and MCP tools you already have.
+  It never invents a capability name — with nothing installed, it still
+  produces a well-structured prompt, just with fewer skills attached.
+
+## Design notes
+
+A few decisions that came out of testing it against real prompts:
+
+- **It doesn't interview you.** An earlier version ran a requirements
+  interview before delivering. In practice that produced unanswered
+  question rounds that just delayed the thing you asked for. Scope
+  ambiguity now gets a sensible default plus an inline `[?]` flag in the
+  delivered prompt. The only gate is your choice of capability.
+- **It never collapses the task→skill mapping.** A multi-task prompt with
+  one skill list at the top loses the routing, which is the whole value.
+- **Not every task needs a skill.** Forcing one onto straightforward work
+  in a well-patterned codebase makes the output worse. "None needed" is
+  always an option.
+
+## License
+
+MIT
