@@ -132,6 +132,15 @@ A few decisions that came out of testing it against real prompts:
   delivered prompt. The only gate is your choice of capability.
 - **It never collapses the task→skill mapping.** A multi-task prompt with
   one skill list at the top loses the routing, which is the whole value.
+- **No context preamble by default.** An earlier version opened every
+  prompt with a block restating project IDs, paths and history. But the
+  prompt usually gets pasted back into the same conversation, which already
+  holds all of it — and context copied out of memory files is a *snapshot*,
+  so restating it as present-tense fact is a correctness risk, not just
+  verbosity. Now it goes straight into the tasks. A context line survives
+  only if the task would break or go wrong without it (a hard constraint, a
+  setup command, a non-obvious gotcha), and anything sourced from memory is
+  marked "as of `<date>`, verify" rather than asserted.
 - **Not every task needs a skill.** Forcing one onto straightforward work
   in a well-patterned codebase makes the output worse. "None needed" is
   always an option.

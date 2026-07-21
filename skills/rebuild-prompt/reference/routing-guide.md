@@ -117,8 +117,16 @@ task, each headed by its own skill invocation**:
 ​```
 <Overall goal in the user's voice, one or two sentences.>
 
-Context: <project names, IDs, paths, prior decisions a fresh session needs>
-<setup preconditions, e.g. CLI commands to run first>
+<NO context block by default — the prompt is normally pasted back into the
+ same conversation, which already holds these facts. Include one ONLY for a
+ fresh-session paste, or for a fact that is costly to get wrong and not
+ inferable (a hard constraint, a destructive-action guard). When included,
+ keep it to a few lines that pass "would the task break without this?" —
+ IDs, paths, hard constraints, non-obvious gotchas. Never project history.
+ Mark anything from memory as "as of <date>, verify" rather than as fact.>
+
+<setup preconditions, e.g. CLI commands to run first — keep, these are
+ actionable, not background>
 
 ## Task 1 — <task name, involves writing/modifying code>
 Use /<skill-a> (and /<skill-b> if the task truly spans two domains).
@@ -164,8 +172,10 @@ this output. Single-task prompts may use a single header line instead.
 
 Rules for the prompt body:
 
-- Written to be pasted into a **fresh session** — include the context a new
-  session won't have (IDs, paths, decisions), because memory may not surface it.
+- Written to be pasted back into the **same conversation** by default, so it
+  assumes the window already holds the project facts — no context preamble.
+  Only for an explicit fresh-session paste does it carry the context a new
+  session would lack, and even then only what passes the pruning test.
 - If a subagent or MCP tool (not a slash skill) is part of the routing, name it
   as an instruction inside the body ("dispatch the Evidence Collector agent to
   verify…"), since only skills are slash-invokable.

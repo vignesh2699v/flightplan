@@ -19,6 +19,28 @@ ambiguity either defaulted-and-flagged or resolved by the rare
 skill-determining question. Stop after delivering it. Do not execute it, do
 not offer to execute it beyond a single closing line.
 
+**Default to NO context preamble — go straight into the tasks.** The prompt
+is normally pasted back into the same conversation, whose window already
+holds the project facts. Restating them wastes tokens and, worse, ages
+badly: context copied out of memory files or earlier turns is a snapshot,
+and a snapshot restated as present-tense fact is a correctness risk.
+
+Include a shared context block ONLY when one of these is true:
+- The user says (or it's evident) they're pasting into a **fresh session**.
+- A fact is **costly to get wrong** and not inferable — a hard constraint
+  ("don't publish, it goes straight to production"), a destructive-action
+  guard, or a credential/permission boundary.
+
+When included, apply the pruning test to every single line: **"would the
+task break, or go wrong, without this?"** IDs, paths, hard constraints and
+non-obvious gotchas pass. Project history, what-was-built-when narrative,
+and background recap do not. Two or three lines is a normal context block;
+a paragraph of history is a failure of this test.
+
+Anything restated from **memory files or compacted earlier turns** — rather
+than freshly read this turn — must be marked as a snapshot ("as of <date>,
+verify"), never asserted as current fact.
+
 **Route only against what exists.** The available Skills, subagent types, and
 MCP tools are listed in your current session context. Match against that live
 list — **never invent a capability name.** Flag anything that needs auth, is
@@ -127,6 +149,11 @@ only as a follow-up, never as part of the default path.
 ## Guardrails
 
 - The output is a prompt, not an executed plan. Never begin executing it.
+- No context preamble by default — go straight into the tasks. Add one only
+  for a fresh-session paste, or a costly-to-get-wrong constraint. Never
+  restate project history.
+- Context taken from memory or compacted turns is a snapshot: mark it
+  "as of <date>, verify", never state it as current fact.
 - Always shortlist 2–3 candidates per task and let the user pick. Never
   silently choose one — and always state why each runner-up ranked lower.
 - The capability choice is the ONLY pre-delivery gate. No requirements
