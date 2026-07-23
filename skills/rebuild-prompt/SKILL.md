@@ -131,6 +131,17 @@ ambiguity still gets defaulted-and-flagged inline (never a question round) —
 but *which capability runs each task* is the user's call, because that
 decision is the whole point of this skill.
 
+**Any task routed to a subagent carries a reporting contract.** A dispatched
+agent runs out of sight, and a summary is exactly where a check that never
+happened becomes "verified". Write into the task: report at checkpoints
+rather than only at the end; return the specific artifact for that check
+shape (fresh-load screenshots at every breakpoint, before/after numbers with
+method, actual command output, cited sources); and surface what comes back
+verbatim, failures included. State plainly that "verified" with nothing
+attached is a failed task, not a passed one. Mark genuinely independent
+tasks as parallelizable — but never tasks touching the same files or canvas.
+Evidence table in `reference/routing-guide.md`.
+
 Two standing rules apply automatically here, every run (not conditional on a
 question). Both name specific skills — apply each **only if that skill is in
 the current session's listing**; otherwise use the stated fallback and note
@@ -195,6 +206,9 @@ only as a follow-up, never as part of the default path.
   silently choose one — and always state why each runner-up ranked lower.
 - The capability choice is the ONLY pre-delivery gate. No requirements
   interview on top of it.
+- Every subagent task states its reporting contract: checkpoint reporting,
+  the required artifact, and findings surfaced verbatim. An agent task with
+  no named artifact is an unfinished routing decision.
 - Past picks in `routing-history.md` rank a candidate up and get surfaced —
   they never skip the question, hide a runner-up, or beat the stack filter.
 - The routing history records task shape and capability names only. Never

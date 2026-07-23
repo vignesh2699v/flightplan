@@ -106,7 +106,8 @@ this prompt", or "add the right skills to this".
   with click-to-comment sections, instead of a bare `.md` file, so review
   comments become plan revisions.
 - **Verification-shaped work** ("check this", "confirm it works") routes to
-  a subagent rather than a generic skill.
+  a subagent rather than a generic skill — and every agent task states what
+  artifact it must return. "Verified" with nothing attached is a failed task.
 - **Every prompt self-invokes its skills** — it opens with a line telling the
   receiving session to load each named skill itself via the Skill tool.
 - **Every task carries an effort hint** (`[effort: low|medium|high]`) — a
@@ -164,6 +165,15 @@ A few decisions that came out of testing it against real prompts:
   matched; these 3 ranked highest"). Presenting 3-of-20 as though it were
   3-of-3 would recreate the exact invisible-filtering problem the shortlist
   step exists to prevent.
+- **A dispatched agent runs out of sight.** What comes back is a summary you
+  can't audit — and a summary is exactly where a check that never happened
+  becomes "verified". So every agent task now carries a reporting contract:
+  report at checkpoints rather than only at the end, return the specific
+  artifact for that check shape (fresh-load screenshots at *every*
+  breakpoint, before/after numbers with method, actual command output, cited
+  sources), and surface findings verbatim including failures. Independent
+  tasks get marked parallelizable — but never ones touching the same files,
+  where concurrent edits conflict and the time saved isn't worth it.
 - **Routing history is a signal, not a preference lock.** The shortlist step
   asks you the same judgement call repeatedly — pick `/impeccable` over
   `/high-end-visual-design` three times and the fourth ask is noise. So

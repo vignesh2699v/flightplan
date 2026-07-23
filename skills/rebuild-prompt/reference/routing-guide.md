@@ -139,6 +139,42 @@ file.
 - **Nothing fits → attach nothing** and say so. Don't force a bad match.
 - Order multi-task prompts by dependency; communication/publishing steps last.
 
+## Standing rule: agent tasks report as they go, and return artifacts
+
+A dispatched subagent runs out of sight. What comes back is a summary the
+user cannot audit — and a summary is exactly where a check that never
+happened becomes "verified". Every task in the rebuilt prompt that dispatches
+an agent must therefore carry a **reporting contract**, written into the task
+body:
+
+1. **Report at checkpoints, not just at the end.** State what's being checked
+   before checking it, and what was found immediately after — so a run that
+   stalls or goes wrong is visible while it's happening, not after.
+2. **Return artifacts, not adjectives.** Name the specific evidence the task
+   must produce. "Verified", "looks good", "all working" with nothing
+   attached is a **failed task, not a passed one** — say so in the prompt.
+3. **Surface findings verbatim.** The session that dispatched the agent
+   reports what came back, including the parts that failed. Never compress an
+   agent's failures into a clean summary line.
+
+**What counts as evidence, by check shape:**
+
+| Check shape | Required artifact |
+|---|---|
+| Visual / layout | Fresh-load screenshots at every breakpoint — not one viewport, not a cached load |
+| Performance | Before/after numbers plus the measurement method |
+| Correctness / build | The actual command output, not a claim that it passed |
+| Accessibility | The assistive-technology result, not a checklist ticked from source |
+| Security | `file:line` plus a concrete reproduction |
+| Research / discovery | The sources read, cited — not just the conclusion |
+
+**Mark independent tasks as parallelizable.** When two tasks have no
+dependency, say so in the prompt (*"Tasks 2 and 3 are independent — dispatch
+both"*), so the executing session runs them concurrently instead of serially.
+Do **not** mark tasks parallel when they touch the same files or the same
+canvas: concurrent edits to shared state conflict, and the time saved is not
+worth the corruption. Dependency ordering always wins over parallelism.
+
 ## Standing rule: implementation tasks get an automatic quality gate
 
 Any task in the rebuilt prompt that **writes or modifies code** automatically
@@ -226,9 +262,13 @@ change actually works end-to-end, not just that tests/typecheck pass.
 ## Task 2 — <verification/QA-shaped task>  (after Task 1)   [effort: high]
 Dispatch the <Agent Name> agent (e.g. Code Reviewer, Evidence Collector,
 Performance Benchmarker — whichever fits the check being asked for).
-<What to verify/do, and the evidence required.>   ← agents/MCP tools are
-                                                     named as instructions,
-                                                     not slashes
+<What to verify/do.>   ← agents/MCP tools are named as instructions,
+                          not slashes
+Report each check before running it and its result immediately after, then
+return <the specific artifact: fresh-load screenshots at every breakpoint /
+before-after numbers with method / actual command output>. "Verified" with
+nothing attached is a failed task. Surface whatever comes back verbatim,
+failures included.
 
 ## Task 3 — <plan/spec-producing task>   [effort: medium]
 Use /superpowers:writing-plans (or /interview-me, whichever fits).
