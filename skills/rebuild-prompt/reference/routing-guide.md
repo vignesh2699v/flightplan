@@ -74,6 +74,51 @@ Present as AskUserQuestion — one question per task, candidates as options,
 top pick marked "(Recommended)", plus a "none needed" option where direct
 implementation genuinely wins.
 
+## Routing history — learn from what the user already chose
+
+The shortlist step asks the user to make the same judgement call repeatedly.
+Someone who picked `/impeccable` over `/high-end-visual-design` for a design
+refinement three times running should not be asked a fourth time as though
+the question were fresh. Past picks are a **ranking signal**.
+
+**Where it lives.** A `routing-history.md` file alongside this skill's own
+directory (`<skill-dir>/routing-history.md`). It is created on first write —
+never assume it exists, and never fail if it doesn't. For a project-scoped
+install, add it to `.gitignore`: it's local preference data, not shared
+config.
+
+**Format** — one row per task, appended:
+
+```markdown
+| date | task shape | chosen | passed over |
+|---|---|---|---|
+| 2026-07-23 | design refinement, canvas tool | /impeccable | /high-end-visual-design, /transitions-dev |
+| 2026-07-23 | breakpoint QA, visual proof | Evidence Collector | /verify |
+```
+
+**Read it before shortlisting.** If a past row matches the current task
+shape, mark that candidate in the shortlist — *"you chose this for a similar
+task on `<date>`"* — and rank it up one position. That's all it does.
+
+**It is a signal, never a lock-in:**
+- Still present the full shortlist with runners-up and reasons. A past pick
+  that stops the user from seeing alternatives recreates the silent-routing
+  failure this skill exists to prevent.
+- Still ask. Never auto-apply a past choice and skip the question.
+- A past pick that's now **wrong for the stack** loses to the stack filter —
+  narrowing by stack/platform happens first, and history cannot override it.
+- Treat the row as a snapshot: the skill it names may no longer be installed.
+  Check the live session listing before offering it, same as any candidate.
+
+**Write only after the user picks.** Append one row per task: date, a short
+task-shape phrase, the chosen capability, the ones passed over.
+
+**Never record prompt content.** Task *shape* only — "design refinement,
+canvas tool", not the user's brief. Prompts routinely contain client names,
+unreleased work, credentials and internal URLs; a routing log is not the
+place for any of it. Anyone who can read the skill directory can read this
+file.
+
 ## Matching heuristics
 
 - **Specific beats general.** A skill built for the exact job wins (charts →

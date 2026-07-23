@@ -111,6 +111,9 @@ this prompt", or "add the right skills to this".
   receiving session to load each named skill itself via the Skill tool.
 - **Every task carries an effort hint** (`[effort: low|medium|high]`) — a
   second routing axis alongside *which* capability runs it.
+- **It remembers what you picked.** Past choices are recorded per task shape
+  and surface in later shortlists as a ranking signal — never as a decision
+  made on your behalf.
 
 Both standing rules name specific skills (`/code-review`, `/verify`, and a
 commentable-preview skill). Each is applied **only if installed**, with a
@@ -161,6 +164,16 @@ A few decisions that came out of testing it against real prompts:
   matched; these 3 ranked highest"). Presenting 3-of-20 as though it were
   3-of-3 would recreate the exact invisible-filtering problem the shortlist
   step exists to prevent.
+- **Routing history is a signal, not a preference lock.** The shortlist step
+  asks you the same judgement call repeatedly — pick `/impeccable` over
+  `/high-end-visual-design` three times and the fourth ask is noise. So
+  picks are logged per task shape in a local `routing-history.md` beside the
+  skill, and a matching past pick gets flagged and ranked up one position.
+  It never auto-applies, never hides a runner-up, and always loses to the
+  stack filter. The log stores task *shape* and capability names only —
+  never your prompt text, since prompts routinely carry client names,
+  unreleased work and internal URLs. For a project-scoped install, gitignore
+  it: it's local preference data, not shared config.
 - **Not every task needs a skill.** Forcing one onto straightforward work
   in a well-patterned codebase makes the output worse. "None needed" is
   always an option.

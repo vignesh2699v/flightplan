@@ -115,6 +115,17 @@ overlapping scoped/generic skills, and **always report the funnel** ("14
 matched; these 3 ranked highest") so the shortlist reads as a filter, not as
 the whole field. Full mechanics in `reference/routing-guide.md`.
 
+**Check the routing history first, and append to it after.** A
+`routing-history.md` beside this skill's directory records which capability
+the user chose for each past task shape. Read it before ranking: a matching
+past pick gets marked in the shortlist (*"you chose this for a similar task
+on `<date>`"*) and ranked up one position. It is a **signal, not a
+lock-in** — still show every candidate, still ask, and let the stack filter
+override it. After the user picks, append one row per task. Record the task
+*shape* only, never prompt content — prompts carry client names, unreleased
+work and internal URLs. Create the file if absent; never fail if it isn't
+there. Format in `reference/routing-guide.md`.
+
 **This is the one step that gates delivery.** Scope and requirement
 ambiguity still gets defaulted-and-flagged inline (never a question round) —
 but *which capability runs each task* is the user's call, because that
@@ -184,6 +195,10 @@ only as a follow-up, never as part of the default path.
   silently choose one — and always state why each runner-up ranked lower.
 - The capability choice is the ONLY pre-delivery gate. No requirements
   interview on top of it.
+- Past picks in `routing-history.md` rank a candidate up and get surfaced —
+  they never skip the question, hide a runner-up, or beat the stack filter.
+- The routing history records task shape and capability names only. Never
+  write prompt content, client names, URLs or credentials into it.
 - Never construct a single-option AskUserQuestion — plain text or a
   multiple-choice with real context-derived options instead.
 - Unresolved scope ambiguity gets a sensible default + inline `[?]` note, not
