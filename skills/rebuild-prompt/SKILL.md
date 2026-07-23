@@ -19,6 +19,19 @@ ambiguity either defaulted-and-flagged or resolved by the rare
 skill-determining question. Stop after delivering it. Do not execute it, do
 not offer to execute it beyond a single closing line.
 
+**The pasted prompt must self-invoke its skills.** Pasting text does not
+fire the editor's slash-command autocomplete, and only one slash command can
+lead a message — so a multi-task prompt can never be UI-tagged, by design.
+Every rebuilt prompt therefore **opens with a line instructing the receiving
+session to invoke each named skill itself via the Skill tool.** Use the
+exact registered skill names, since that line is what turns them from inert
+text into actual invocations. Never tell the user to tag skills by hand.
+
+**Annotate each task with an effort hint** — `[effort: low|medium|high]`
+after the task heading. Mechanical work is low; judgment-heavy design and
+adversarial verification are high. This is a second routing axis: not just
+*which* capability, but *how much care* the task warrants.
+
 **Default to NO context preamble — go straight into the tasks.** The prompt
 is normally pasted back into the same conversation, whose window already
 holds the project facts. Restating them wastes tokens and, worse, ages
@@ -92,8 +105,15 @@ subagent → MCP tool. Verification/QA-shaped sub-steps ("check this," "review
 this," "confirm it works") should shortlist **subagents**, not generic
 skills. Search the listing broadly before ranking — near-miss skills that got
 considered and rejected still belong in the shortlist with the reason, since
-that reasoning is exactly what the user wants to see. See
-`reference/routing-guide.md` for heuristics and availability flags.
+that reasoning is exactly what the user wants to see.
+
+**Sessions can carry hundreds of skills** (up to 500), with plugin packs
+installing dozens of near-duplicates. Narrow the field **by stack/platform
+first**, then by task shape, and only then rank — a Python reviewer is not a
+candidate for a TypeScript project. Apply the namespace tie-break for
+overlapping scoped/generic skills, and **always report the funnel** ("14
+matched; these 3 ranked highest") so the shortlist reads as a filter, not as
+the whole field. Full mechanics in `reference/routing-guide.md`.
 
 **This is the one step that gates delivery.** Scope and requirement
 ambiguity still gets defaulted-and-flagged inline (never a question round) —
@@ -149,6 +169,12 @@ only as a follow-up, never as part of the default path.
 ## Guardrails
 
 - The output is a prompt, not an executed plan. Never begin executing it.
+- Every prompt opens with the self-invocation line so pasted `/skill` names
+  actually load. Never instruct the user to tag skills manually — pasting
+  can't trigger autocomplete, and multi-task prompts can't be UI-tagged.
+- Every task carries an `[effort: low|medium|high]` hint.
+- Narrow candidates by stack before ranking, and report the funnel — a
+  session may hold up to 500 skills, most of them irrelevant.
 - No context preamble by default — go straight into the tasks. Add one only
   for a fresh-session paste, or a costly-to-get-wrong constraint. Never
   restate project history.

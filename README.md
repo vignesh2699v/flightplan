@@ -107,6 +107,10 @@ this prompt", or "add the right skills to this".
   comments become plan revisions.
 - **Verification-shaped work** ("check this", "confirm it works") routes to
   a subagent rather than a generic skill.
+- **Every prompt self-invokes its skills** — it opens with a line telling the
+  receiving session to load each named skill itself via the Skill tool.
+- **Every task carries an effort hint** (`[effort: low|medium|high]`) — a
+  second routing axis alongside *which* capability runs it.
 
 Both standing rules name specific skills (`/code-review`, `/verify`, and a
 commentable-preview skill). Each is applied **only if installed**, with a
@@ -141,6 +145,22 @@ A few decisions that came out of testing it against real prompts:
   only if the task would break or go wrong without it (a hard constraint, a
   setup command, a non-obvious gotcha), and anything sourced from memory is
   marked "as of `<date>`, verify" rather than asserted.
+- **Pasted prompts can't be tagged by hand — so they tag themselves.**
+  Pasting text doesn't fire the editor's slash-command autocomplete, and
+  only one slash command can ever lead a message, so a six-task prompt with
+  six skills is impossible to UI-tag *by design*. The mechanism that works
+  is the Skill tool: the model reads "Use /impeccable" as an instruction and
+  loads the skill itself. Every rebuilt prompt therefore opens with a line
+  saying exactly that. It makes invocation reliable, not guaranteed — it's
+  an instruction the model follows, not a hard mechanism — but it beats
+  tagging six skills one at a time, which was never going to work anyway.
+- **Shortlists report their denominator.** A session can now hold up to 500
+  skills, and plugin packs install dozens of near-duplicates — a dozen
+  language-specific code reviewers alone. Candidates get narrowed by
+  stack/platform *before* ranking, and the output states the funnel ("14
+  matched; these 3 ranked highest"). Presenting 3-of-20 as though it were
+  3-of-3 would recreate the exact invisible-filtering problem the shortlist
+  step exists to prevent.
 - **Not every task needs a skill.** Forcing one onto straightforward work
   in a well-patterned codebase makes the output worse. "None needed" is
   always an option.

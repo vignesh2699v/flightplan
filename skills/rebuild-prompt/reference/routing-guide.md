@@ -23,6 +23,38 @@ Flag rather than assume:
 
 ## Building the shortlist (2–3 candidates per task)
 
+A session can carry **hundreds of skills** (up to 500), and large plugin
+packs install dozens of near-identical ones — a dozen language-specific code
+reviewers, several overlapping design skills, multiple review agents. Assume
+the candidate field is large and messy, and narrow it deliberately.
+
+**Narrow before you rank — in this order:**
+
+1. **By stack/platform first.** Detect what the project actually is, then
+   drop every candidate that can't apply. Never shortlist a Python reviewer
+   for a TypeScript project, or a CSS-transitions skill for canvas-based
+   design work. This single filter routinely cuts a 20-candidate field to
+   3–4, and is the highest-leverage step.
+2. **By task shape.** Build vs. review vs. plan vs. verify.
+3. **Then rank** whatever survives.
+
+**Namespace tie-break.** When a plugin-scoped skill and a generic one both
+match (e.g. `/some-plugin:code-review` vs `/code-review`), prefer:
+   1. A **project-scoped** skill from the repo being worked in — it encodes
+      that project's own conventions.
+   2. The **more specific** skill (language/framework-specific beats
+      generic) *when* the detected stack matches it exactly.
+   3. The **generic/built-in** skill otherwise — fewer assumptions, and the
+      user more likely knows its behaviour already.
+State which rule decided it. Two skills with near-identical descriptions is
+a genuine ambiguity — surface it rather than picking silently.
+
+**Always report the funnel.** State how many plausible candidates existed
+before narrowing: *"14 review skills matched; these 3 ranked highest."* A
+shortlist without a denominator implies the field was only three wide.
+Invisible filtering is precisely the failure this step exists to prevent —
+presenting 3-of-20 as though it were 3-of-3 recreates it.
+
 Search the listing **broadly** before ranking. The listing is long and full
 of overlapping design/motion/review skills — a shortlist that only contains
 the obvious pick means the search was too shallow.
@@ -111,10 +143,22 @@ The deliverable is ONE fenced code block the user can copy verbatim. It keeps
 the task decomposition visible: shared context up top, then **one block per
 task, each headed by its own skill invocation**:
 
+Every rebuilt prompt **must open with the self-invocation line** below,
+verbatim, before anything else. Without it a pasted prompt's `/skill`
+mentions are inert text: pasting does not fire the editor's slash-command
+autocomplete, and only one slash command can ever lead a message — so a
+multi-task prompt is impossible to UI-tag by design. The line tells the
+receiving session to invoke each named skill itself via the Skill tool,
+which is the mechanism that actually works.
+
 ```markdown
 ## Your rebuilt prompt
 
 ​```
+As you reach each task below, invoke the skill named in it via the Skill
+tool before doing that task's work. The /names are instructions to you, not
+decorative text — load each one yourself; I have not tagged them.
+
 <Overall goal in the user's voice, one or two sentences.>
 
 <NO context block by default — the prompt is normally pasted back into the
@@ -128,20 +172,20 @@ task, each headed by its own skill invocation**:
 <setup preconditions, e.g. CLI commands to run first — keep, these are
  actionable, not background>
 
-## Task 1 — <task name, involves writing/modifying code>
+## Task 1 — <task name, involves writing/modifying code>   [effort: high]
 Use /<skill-a> (and /<skill-b> if the task truly spans two domains).
 <What to do, requirements, constraints.>
 Then: run /code-review on the changes; then run /verify to confirm the
 change actually works end-to-end, not just that tests/typecheck pass.
 
-## Task 2 — <verification/QA-shaped task>  (after Task 1)
+## Task 2 — <verification/QA-shaped task>  (after Task 1)   [effort: high]
 Dispatch the <Agent Name> agent (e.g. Code Reviewer, Evidence Collector,
 Performance Benchmarker — whichever fits the check being asked for).
 <What to verify/do, and the evidence required.>   ← agents/MCP tools are
                                                      named as instructions,
                                                      not slashes
 
-## Task 3 — <plan/spec-producing task>
+## Task 3 — <plan/spec-producing task>   [effort: medium]
 Use /superpowers:writing-plans (or /interview-me, whichever fits).
 <What the plan needs to cover.>
 When the plan is ready, publish it as an interactive HTML artifact (Artifact
@@ -169,6 +213,23 @@ when they're absent.
 **Never collapse the mapping.** A multi-task prompt with a single skill list at
 the top loses the routing — the per-task skill assignment is the core value of
 this output. Single-task prompts may use a single header line instead.
+
+## Effort annotations
+
+Tag each task with a `[effort: low|medium|high]` hint after its heading —
+a second routing axis alongside *which* capability runs it:
+
+- **low** — mechanical, well-specified work with a clear right answer
+  (formatter fixes, renames, applying an approved plan step, de-slop sweeps).
+- **medium** — normal implementation and design work.
+- **high** — judgment-heavy or adversarial work: architecture decisions,
+  structural design refinement, verification that must actually catch
+  problems, anything where a shallow pass produces confident-but-wrong
+  output.
+
+These are advisory. Harnesses that support per-agent effort can consume them
+directly; in a plain chat session they still steer how much care the model
+gives each task. Keep them to the three levels — don't invent a scale.
 
 Rules for the prompt body:
 
