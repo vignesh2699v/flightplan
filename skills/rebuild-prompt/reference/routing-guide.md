@@ -299,6 +299,18 @@ gives each task. Keep them to the three levels — don't invent a scale.
 
 Rules for the prompt body:
 
+- **Point, don't paste.** Before inlining any fact, ask where it already
+  lives. If it's in a file the executing session can open — a playbook, a
+  README, a config, a memory file, the code itself — name the path and let
+  it go read it. Inline only what exists nowhere else, or what the session
+  would not think to look for. Copying a documented list (parser gotchas,
+  setup steps, conventions) into the prompt makes it longer *and* forks the
+  fact: the copy in the prompt ages while the original moves on, and a
+  stale copy asserted as current is worse than a pointer. The test is
+  **"can the session read this itself?"** — if yes, point at it. This is the
+  same reasoning as the no-context-preamble rule, one level deeper: that one
+  says don't restate what the *conversation* holds, this one says don't
+  restate what the *filesystem* holds.
 - **Never hard-wrap a paragraph.** Every sentence in a paragraph goes on one
   unbroken line, however long — line breaks appear only between paragraphs,
   between setup/context and the first task, and between tasks. A hard-wrapped

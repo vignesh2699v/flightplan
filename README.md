@@ -180,6 +180,14 @@ A few decisions that came out of testing it against real prompts:
   never your prompt text, since prompts routinely carry client names,
   unreleased work and internal URLs. For a project-scoped install, gitignore
   it: it's local preference data, not shared config.
+- **Point, don't paste.** If a fact lives in a file the executing session can
+  open — a playbook, a README, a config, the code itself — the prompt names
+  the path instead of copying the contents in. Inlining a documented list of
+  gotchas doesn't just make the prompt longer; it forks the fact, so the copy
+  in the prompt ages while the original moves on. A stale copy asserted as
+  current is worse than a pointer. Same reasoning as the context-preamble
+  rule, one level deeper: that one says don't restate what the conversation
+  holds, this one says don't restate what the filesystem holds.
 - **The prompt body is never hard-wrapped.** An earlier version wrote each
   paragraph as manually broken ~70-80-character lines, matching how this
   guide's own prose is formatted. That's fine for docs that are only ever

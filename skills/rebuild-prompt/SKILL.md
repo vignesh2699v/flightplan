@@ -34,6 +34,14 @@ which are read, never pasted) becomes a real newline in the delivered
 prompt, and a paste box only reflows text with no newlines in it. Hard-wrap
 the body and it visibly wastes half the box no matter how wide it is.
 
+**Point, don't paste.** If a fact lives in a file the executing session can
+open — a playbook, a README, a config, a memory file — reference it by path
+and move on. Only inline what exists nowhere else. Pasting a documented list
+of gotchas into the prompt doesn't just make it longer; it creates a second
+copy that ages independently of the real one. This is the v1.1 context rule
+applied one level deeper: a prompt is an instruction to go read and act, not
+a place to reproduce what's already written down.
+
 **Annotate each task with an effort hint** — `[effort: low|medium|high]`
 after the task heading. Mechanical work is low; judgment-heavy design and
 adversarial verification are high. This is a second routing axis: not just
@@ -204,6 +212,8 @@ only as a follow-up, never as part of the default path.
 - Every task carries an `[effort: low|medium|high]` hint.
 - The prompt body is never hard-wrapped — one unbroken line per paragraph,
   breaks only between paragraphs/tasks, so a paste box reflows it correctly.
+- Point, don't paste: reference a readable file by path instead of copying
+  its contents in. A pasted copy ages independently of the original.
 - Narrow candidates by stack before ranking, and report the funnel — a
   session may hold up to 500 skills, most of them irrelevant.
 - No context preamble by default — go straight into the tasks. Add one only
