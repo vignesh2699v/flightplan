@@ -47,17 +47,13 @@ Context: the slowness hasn't been isolated yet — diagnose before assuming.
 
 ## Task 1 — Diagnose and fix performance
 Dispatch the Performance Benchmarker agent.
-Profile the app first (load/render vs. action/data-layer) rather than
-guessing the category. Report what was slow and what changed, with
-before/after numbers.
+Profile the app first (load/render vs. action/data-layer) rather than guessing the category. Report what was slow and what changed, with before/after numbers.
 
 ## Task 2 — De-genericize the UI   (after Task 1)
 Use /kill-ai-slop.
-The app currently reads as visually generic. Remove the tells without
-touching the performance fix from Task 1.
+The app currently reads as visually generic. Remove the tells without touching the performance fix from Task 1.
 
-Done = profiling data shows the bottleneck fixed with before/after
-numbers, and the UI no longer reads as templated.
+Done = profiling data shows the bottleneck fixed with before/after numbers, and the UI no longer reads as templated.
 ```
 
 ...plus a table showing which capabilities were considered and why each was
@@ -184,6 +180,15 @@ A few decisions that came out of testing it against real prompts:
   never your prompt text, since prompts routinely carry client names,
   unreleased work and internal URLs. For a project-scoped install, gitignore
   it: it's local preference data, not shared config.
+- **The prompt body is never hard-wrapped.** An earlier version wrote each
+  paragraph as manually broken ~70-80-character lines, matching how this
+  guide's own prose is formatted. That's fine for docs that are only ever
+  read — but the delivered prompt gets pasted into a text box, and a real
+  newline in the text is not the same as a soft wrap: the box can only
+  reflow text that has none. Hard-wrapped output pastes ragged and visibly
+  wastes half the box no matter how wide it is. Now every paragraph in the
+  delivered prompt is one unbroken line; breaks appear only between
+  paragraphs and tasks.
 - **Not every task needs a skill.** Forcing one onto straightforward work
   in a well-patterned codebase makes the output worse. "None needed" is
   always an option.

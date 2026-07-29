@@ -27,6 +27,13 @@ session to invoke each named skill itself via the Skill tool.** Use the
 exact registered skill names, since that line is what turns them from inert
 text into actual invocations. Never tell the user to tag skills by hand.
 
+**Never hard-wrap the prompt body.** Write each paragraph as one unbroken
+line, however long — break only between paragraphs and between tasks. A
+manual line break every ~70-80 characters (fine for this skill's own docs,
+which are read, never pasted) becomes a real newline in the delivered
+prompt, and a paste box only reflows text with no newlines in it. Hard-wrap
+the body and it visibly wastes half the box no matter how wide it is.
+
 **Annotate each task with an effort hint** — `[effort: low|medium|high]`
 after the task heading. Mechanical work is low; judgment-heavy design and
 adversarial verification are high. This is a second routing axis: not just
@@ -195,6 +202,8 @@ only as a follow-up, never as part of the default path.
   actually load. Never instruct the user to tag skills manually — pasting
   can't trigger autocomplete, and multi-task prompts can't be UI-tagged.
 - Every task carries an `[effort: low|medium|high]` hint.
+- The prompt body is never hard-wrapped — one unbroken line per paragraph,
+  breaks only between paragraphs/tasks, so a paste box reflows it correctly.
 - Narrow candidates by stack before ranking, and report the funnel — a
   session may hold up to 500 skills, most of them irrelevant.
 - No context preamble by default — go straight into the tasks. Add one only

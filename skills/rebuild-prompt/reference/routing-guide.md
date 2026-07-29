@@ -236,47 +236,28 @@ which is the mechanism that actually works.
 ## Your rebuilt prompt
 
 ​```
-As you reach each task below, invoke the skill named in it via the Skill
-tool before doing that task's work. The /names are instructions to you, not
-decorative text — load each one yourself; I have not tagged them.
+As you reach each task below, invoke the skill named in it via the Skill tool before doing that task's work. The /names are instructions to you, not decorative text — load each one yourself; I have not tagged them.
 
-<Overall goal in the user's voice, one or two sentences.>
+<Overall goal in the user's voice, one or two sentences — on ONE unbroken line.>
 
-<NO context block by default — the prompt is normally pasted back into the
- same conversation, which already holds these facts. Include one ONLY for a
- fresh-session paste, or for a fact that is costly to get wrong and not
- inferable (a hard constraint, a destructive-action guard). When included,
- keep it to a few lines that pass "would the task break without this?" —
- IDs, paths, hard constraints, non-obvious gotchas. Never project history.
- Mark anything from memory as "as of <date>, verify" rather than as fact.>
+<NO context block by default — the prompt is normally pasted back into the same conversation, which already holds these facts. Include one ONLY for a fresh-session paste, or for a fact that is costly to get wrong and not inferable (a hard constraint, a destructive-action guard). When included, keep it to a few lines that pass "would the task break without this?" — IDs, paths, hard constraints, non-obvious gotchas. Never project history. Mark anything from memory as "as of <date>, verify" rather than as fact.>
 
-<setup preconditions, e.g. CLI commands to run first — keep, these are
- actionable, not background>
+<setup preconditions, e.g. CLI commands to run first — keep, these are actionable, not background>
 
 ## Task 1 — <task name, involves writing/modifying code>   [effort: high]
 Use /<skill-a> (and /<skill-b> if the task truly spans two domains).
-<What to do, requirements, constraints.>
-Then: run /code-review on the changes; then run /verify to confirm the
-change actually works end-to-end, not just that tests/typecheck pass.
+<What to do, requirements, constraints — one unbroken line per paragraph.>
+Then: run /code-review on the changes; then run /verify to confirm the change actually works end-to-end, not just that tests/typecheck pass.
 
 ## Task 2 — <verification/QA-shaped task>  (after Task 1)   [effort: high]
-Dispatch the <Agent Name> agent (e.g. Code Reviewer, Evidence Collector,
-Performance Benchmarker — whichever fits the check being asked for).
-<What to verify/do.>   ← agents/MCP tools are named as instructions,
-                          not slashes
-Report each check before running it and its result immediately after, then
-return <the specific artifact: fresh-load screenshots at every breakpoint /
-before-after numbers with method / actual command output>. "Verified" with
-nothing attached is a failed task. Surface whatever comes back verbatim,
-failures included.
+Dispatch the <Agent Name> agent (e.g. Code Reviewer, Evidence Collector, Performance Benchmarker — whichever fits the check being asked for). ← agents/MCP tools are named as instructions, not slashes
+<What to verify/do.>
+Report each check before running it and its result immediately after, then return <the specific artifact: fresh-load screenshots at every breakpoint / before-after numbers with method / actual command output>. "Verified" with nothing attached is a failed task. Surface whatever comes back verbatim, failures included.
 
 ## Task 3 — <plan/spec-producing task>   [effort: medium]
 Use /superpowers:writing-plans (or /interview-me, whichever fits).
 <What the plan needs to cover.>
-When the plan is ready, publish it as an interactive HTML artifact (Artifact
-tool) reusing /interview-me's commentable-preview mechanism — click-to-
-comment sections + a Revise action — instead of a bare .md file. Treat
-submitted comments as revision requests for the plan.
+When the plan is ready, publish it as an interactive HTML artifact (Artifact tool) reusing /interview-me's commentable-preview mechanism — click-to-comment sections + a Revise action — instead of a bare .md file. Treat submitted comments as revision requests for the plan.
 
 Done = <success criteria for the whole prompt — what the user reviews>.
 ​```
@@ -318,6 +299,17 @@ gives each task. Keep them to the three levels — don't invent a scale.
 
 Rules for the prompt body:
 
+- **Never hard-wrap a paragraph.** Every sentence in a paragraph goes on one
+  unbroken line, however long — line breaks appear only between paragraphs,
+  between setup/context and the first task, and between tasks. A hard-wrapped
+  paragraph (a manual line break every ~70-80 characters, the way this guide's
+  own prose is formatted for readability) carries a **real newline** into
+  whatever the user pastes it into. A paste box only reflows text that has no
+  newlines in it — hard-wrapped text keeps breaking at the same spot no
+  matter how wide the box is, so the delivered prompt visibly wastes half the
+  box. This rule applies ONLY to the prompt body inside the fenced block; this
+  routing guide and SKILL.md may keep their own hard-wrapped prose, since
+  neither is ever pasted anywhere.
 - Written to be pasted back into the **same conversation** by default, so it
   assumes the window already holds the project facts — no context preamble.
   Only for an explicit fresh-session paste does it carry the context a new
