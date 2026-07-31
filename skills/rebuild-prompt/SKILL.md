@@ -1,251 +1,135 @@
 ---
 name: rebuild-prompt
-description: Use when the user runs /rebuild-prompt or asks to "rebuild", "polish", "optimize", or "add the right skills/agents to" a rough prompt. Takes a vague or multi-task prompt and routes it to the best-fit installed Skills / subagents / MCP tools, then immediately RETURNS a polished ready-to-paste prompt with the /skill invocations embedded per task (unresolved ambiguity is flagged inline with a default, not gated behind questions). Code-writing tasks automatically get a trailing code-review + verify pass; plan/spec-producing tasks are routed to render as a commentable HTML artifact instead of a bare .md. It never executes the prompt — the user runs it themselves.
+description: Rebuild a rough prompt into a polished, ready-to-paste one, with the best-fit installed skills, subagents and MCP tools routed to each task it contains. Use when the user runs /rebuild-prompt, or asks to rebuild, polish, or add the right skills or agents to a prompt they have written. Returns the prompt for the user to run themselves; never executes it.
 ---
 
 # Rebuild Prompt
 
-Turn a rough, generic, or multi-task prompt into a **polished, ready-to-use
-prompt with the right `/skill` invocations embedded**. The user copies the
-result and runs it themselves — this skill's output is a prompt, never an
-executed task.
-
-## Core principles
-
-**The deliverable is a prompt.** A single copy-paste block: the chosen
-`/skill`s per task, followed by a rewritten, high-signal version of what the
-user asked for — implicit intent made explicit, success criteria added,
-ambiguity either defaulted-and-flagged or resolved by the rare
-skill-determining question. Stop after delivering it. Do not execute it, do
-not offer to execute it beyond a single closing line.
-
-**The pasted prompt must self-invoke its skills.** Pasting text does not
-fire the editor's slash-command autocomplete, and only one slash command can
-lead a message — so a multi-task prompt can never be UI-tagged, by design.
-Every rebuilt prompt therefore **opens with a line instructing the receiving
-session to invoke each named skill itself via the Skill tool.** Use the
-exact registered skill names, since that line is what turns them from inert
-text into actual invocations. Never tell the user to tag skills by hand.
-
-**Never hard-wrap the prompt body.** Write each paragraph as one unbroken
-line, however long — break only between paragraphs and between tasks. A
-manual line break every ~70-80 characters (fine for this skill's own docs,
-which are read, never pasted) becomes a real newline in the delivered
-prompt, and a paste box only reflows text with no newlines in it. Hard-wrap
-the body and it visibly wastes half the box no matter how wide it is.
-
-**Point, don't paste.** If a fact lives in a file the executing session can
-open — a playbook, a README, a config, a memory file — reference it by path
-and move on. Only inline what exists nowhere else. Pasting a documented list
-of gotchas into the prompt doesn't just make it longer; it creates a second
-copy that ages independently of the real one. This is the v1.1 context rule
-applied one level deeper: a prompt is an instruction to go read and act, not
-a place to reproduce what's already written down.
-
-**Annotate each task with an effort hint** — `[effort: low|medium|high]`
-after the task heading. Mechanical work is low; judgment-heavy design and
-adversarial verification are high. This is a second routing axis: not just
-*which* capability, but *how much care* the task warrants.
-
-**Default to NO context preamble — go straight into the tasks.** The prompt
-is normally pasted back into the same conversation, whose window already
-holds the project facts. Restating them wastes tokens and, worse, ages
-badly: context copied out of memory files or earlier turns is a snapshot,
-and a snapshot restated as present-tense fact is a correctness risk.
-
-Include a shared context block ONLY when one of these is true:
-- The user says (or it's evident) they're pasting into a **fresh session**.
-- A fact is **costly to get wrong** and not inferable — a hard constraint
-  ("don't publish, it goes straight to production"), a destructive-action
-  guard, or a credential/permission boundary.
-
-When included, apply the pruning test to every single line: **"would the
-task break, or go wrong, without this?"** IDs, paths, hard constraints and
-non-obvious gotchas pass. Project history, what-was-built-when narrative,
-and background recap do not. Two or three lines is a normal context block;
-a paragraph of history is a failure of this test.
-
-Anything restated from **memory files or compacted earlier turns** — rather
-than freshly read this turn — must be marked as a snapshot ("as of <date>,
-verify"), never asserted as current fact.
-
-**Route only against what exists.** The available Skills, subagent types, and
-MCP tools are listed in your current session context. Match against that live
-list — **never invent a capability name.** Flag anything that needs auth, is
-disconnected, or has a setup precondition (e.g. a CLI that must run first).
-
-**Deliver fast, with one gate.** The only thing that gates delivery is the
-user's choice of capability per task (step 2) — never a requirements
-interview. Present shortlists, get the picks, write the prompt. Scope
-ambiguity is defaulted-and-flagged inline, not asked about.
-
-**Show your routing reasoning.** Never silently exclude a plausible skill.
-If a capability was considered and passed over, that belongs in the
-shortlist with the reason — the user cannot overrule reasoning they can't
-see, and invisible routing decisions are this skill's main failure mode.
-
-**Never construct a single-option question.** AskUserQuestion requires ≥2 real
-options and will error otherwise. If there's no natural discrete choice set —
-e.g. "which project?" with nothing inferable from the session — either ask in
-plain text (no tool call), or, if there's known relevant context (recent
-projects, prior memories), offer those as multiple-choice options ("Other" is
-always available as the escape hatch). Never pass a single fabricated option
-just to satisfy the tool's shape.
+Turn a rough prompt into a polished one with the right `/skill` invocations
+embedded per task. The user copies the result and runs it themselves — the
+output is a prompt, never an executed task. Deliver it, then stop.
 
 ## The pipeline
 
-### 1. Understand & decompose
-Read the raw prompt. Identify the real intent(s). If it holds multiple tasks,
-split them and order by dependency. Pull in relevant context you already have
-(memory, project files) — don't ask about things you can look up.
+### 1. Decompose
 
-### 2. Shortlist candidates per task — then let the user choose
-Do **not** silently pick one capability per task. For each task, surface a
-ranked shortlist of **2–3 real candidates** from the live session listing,
-then let the user choose before the prompt is written.
+Read the raw prompt and find the real intent. Split multiple tasks and order
+them by dependency. Look up what you can — memory, project files — rather
+than asking about it.
 
-For each task present:
-- **The candidates**, ranked, each with a one-line *what it would bring*.
-- **Why the top pick leads** — and, critically, **why each runner-up was
-  ranked below it**. A silently-excluded skill is the failure mode this step
-  exists to prevent; the user must be able to overrule the ranking.
+Done when every task the user implied has a name and a place in the order.
 
-Then ask via AskUserQuestion — **one question per task, the candidates as the
-options** (max 4 questions per call; batch across calls if there are more
-tasks). Mark the top pick "(Recommended)". Include a "none needed" option
-when direct implementation genuinely beats forcing a skill.
+### 2. Put the candidates on a ballot
 
-Sourcing the shortlist: prefer specific installed Skill → specialized
-subagent → MCP tool. Verification/QA-shaped sub-steps ("check this," "review
-this," "confirm it works") should shortlist **subagents**, not generic
-skills. Search the listing broadly before ranking — near-miss skills that got
-considered and rejected still belong in the shortlist with the reason, since
-that reasoning is exactly what the user wants to see.
+For each task, offer 2–3 real candidates from the live session listing and
+let the user choose. The shortlist is a **ballot**, not a recommendation:
+every plausible candidate appears on it, each runner-up carries the reason it
+ranked lower, and the user's pick decides. Routing the user cannot see is
+routing the user cannot overrule — the failure this skill exists to prevent.
 
-**Sessions can carry hundreds of skills** (up to 500), with plugin packs
-installing dozens of near-duplicates. Narrow the field **by stack/platform
-first**, then by task shape, and only then rank — a Python reviewer is not a
-candidate for a TypeScript project. Apply the namespace tie-break for
-overlapping scoped/generic skills, and **always report the funnel** ("14
-matched; these 3 ranked highest") so the shortlist reads as a filter, not as
-the whole field. Full mechanics in `reference/routing-guide.md`.
+Sessions carry up to 500 skills, most of them irrelevant here. Narrow by
+stack and platform, then by task shape, then rank — and report the funnel
+("14 matched; these 3 ranked highest") so the ballot reads as a filter rather
+than as the whole field.
 
-**Check the routing history first, and append to it after.** A
-`routing-history.md` beside this skill's directory records which capability
-the user chose for each past task shape. Read it before ranking: a matching
-past pick gets marked in the shortlist (*"you chose this for a similar task
-on `<date>`"*) and ranked up one position. It is a **signal, not a
-lock-in** — still show every candidate, still ask, and let the stack filter
-override it. After the user picks, append one row per task. Record the task
-*shape* only, never prompt content — prompts carry client names, unreleased
-work and internal URLs. Create the file if absent; never fail if it isn't
-there. Format in `reference/routing-guide.md`.
+Source candidates in this order: installed Skill → specialized subagent →
+MCP tool. Verification-shaped work ("check this", "confirm it works") belongs
+to subagents.
 
-**This is the one step that gates delivery.** Scope and requirement
-ambiguity still gets defaulted-and-flagged inline (never a question round) —
-but *which capability runs each task* is the user's call, because that
-decision is the whole point of this skill.
+Ask via AskUserQuestion — one question per task, candidates as options, top
+pick marked "(Recommended)", four questions per call at most. Offer "none
+needed" wherever direct implementation beats forcing a skill. Every question
+carries at least two real options; where the session affords no discrete
+choice set, ask in plain text instead.
 
-**Any task routed to a subagent carries a reporting contract.** A dispatched
-agent runs out of sight, and a summary is exactly where a check that never
-happened becomes "verified". Write into the task: report at checkpoints
-rather than only at the end; return the specific artifact for that check
-shape (fresh-load screenshots at every breakpoint, before/after numbers with
-method, actual command output, cited sources); and surface what comes back
-verbatim, failures included. State plainly that "verified" with nothing
-attached is a failed task, not a passed one. Mark genuinely independent
-tasks as parallelizable — but never tasks touching the same files or canvas.
-Evidence table in `reference/routing-guide.md`.
+Read `routing-history.md` beside this skill before ranking. A past pick for a
+matching task shape gets surfaced ("you chose this on `<date>`") and ranked up
+one place. It stays a signal: the ballot still shows every candidate, still
+asks, and the stack filter still overrides it. Append one row per task once
+the user picks, recording task *shape* and capability names only — prompts
+carry client names and internal URLs, and this file holds neither. Create it
+if it is absent.
 
-Two standing rules apply automatically here, every run (not conditional on a
-question). Both name specific skills — apply each **only if that skill is in
-the current session's listing**; otherwise use the stated fallback and note
-it as a flag.
-- **Any task that writes/modifies code** gets a trailing code-review +
-  verification pair appended as sub-steps — a standing quality gate.
-  Preferred: `/code-review` then `/verify`. Fallback if absent: dispatch a
-  code-reviewing subagent, and state the verification expectation in prose
-  ("drive the change end-to-end and observe real behaviour, not just tests").
-- **Any task that produces a plan/spec** (Plan Mode, a plan-writing skill, or
-  any "make a plan for X" ask) gets instructed to render the finished plan as
-  an interactive HTML artifact with click-to-comment sections, instead of a
-  bare `.md` file — submitted comments are treated as revisions to the plan.
-  Preferred: reuse an existing commentable-preview mechanism if one is
-  installed (e.g. `/interview-me`'s). Fallback if absent: publish via the
-  Artifact tool with `class="commentable"` + `data-id` on each block-level
-  section.
+Done when the user has picked a capability for every task.
 
-Full mechanics for both in `reference/routing-guide.md`.
+### 3. Deliver
 
-### 3. Deliver the final prompt — using the user's chosen capabilities
-Write the rebuilt prompt in the **exact fenced-code template** from
-`reference/routing-guide.md` — never a prose sketch or a looser approximation.
-This is mandatory on every run, no exceptions. **The prompt must keep the
-per-task structure from step 2**: shared context first, then one block per
-task, each headed by its own `/skill` invocation (or named agent/tool). Never
-collapse a multi-task prompt under one skill list — the task→skill mapping IS
-the routing value.
+Write the prompt in the fenced-code template from
+`reference/routing-guide.md`, keeping one block per task, each headed by its
+own invocation. The task→skill mapping is the routing value — a multi-task
+prompt collapsed under a single skill list has thrown it away.
 
-For anything genuinely ambiguous, default sensibly and mark it inline as
-`[?]` with a one-line note on what was assumed and why — do not leave a gap
-unfilled or block delivery on it. Follow the code block with a short "why
-these skills" table and any availability flags, then stop.
+Default anything ambiguous and mark it `[?]` inline with what you assumed and
+why. Follow the block with a short "why these skills" table and any
+availability flags, then stop.
 
-**Requirements interviewing stays off the default path.** The capability
-shortlist (step 2) is the only pre-delivery gate. Do NOT additionally hold
-the prompt back for a round of scope/requirement questions — that pattern
-has repeatedly produced unanswered or low-value question rounds that only
-delayed the one thing the user asked for. Scope details, content
-preferences, and minor ambiguity get a sensible default plus an inline
-`[?]`, resolved in the delivered prompt.
+The capability ballot is the only gate. Scope questions get a default and a
+`[?]` — a held-back prompt has repeatedly produced unanswered question rounds
+that only delayed the one thing the user asked for. Offer `/interview-me`
+afterwards if they want more depth.
 
-If the user wants deeper refinement after seeing the delivered prompt, they
-can ask for it, or opt into the full `/interview-me` treatment — offer that
-only as a follow-up, never as part of the default path.
+Done when every line of the delivered prompt passes **"would the task go
+wrong without this?"** Task bodies bloat as readily as context preambles do,
+and this test governs both.
 
-## Guardrails
+## Writing the prompt body
 
-- The output is a prompt, not an executed plan. Never begin executing it.
-- Every prompt opens with the self-invocation line so pasted `/skill` names
-  actually load. Never instruct the user to tag skills manually — pasting
-  can't trigger autocomplete, and multi-task prompts can't be UI-tagged.
-- Every task carries an `[effort: low|medium|high]` hint.
-- The prompt body is never hard-wrapped — one unbroken line per paragraph,
-  breaks only between paragraphs/tasks, so a paste box reflows it correctly.
-- Point, don't paste: reference a readable file by path instead of copying
-  its contents in. A pasted copy ages independently of the original.
-- Narrow candidates by stack before ranking, and report the funnel — a
-  session may hold up to 500 skills, most of them irrelevant.
-- No context preamble by default — go straight into the tasks. Add one only
-  for a fresh-session paste, or a costly-to-get-wrong constraint. Never
-  restate project history.
-- Context taken from memory or compacted turns is a snapshot: mark it
-  "as of <date>, verify", never state it as current fact.
-- Always shortlist 2–3 candidates per task and let the user pick. Never
-  silently choose one — and always state why each runner-up ranked lower.
-- The capability choice is the ONLY pre-delivery gate. No requirements
-  interview on top of it.
-- Every subagent task states its reporting contract: checkpoint reporting,
-  the required artifact, and findings surfaced verbatim. An agent task with
-  no named artifact is an unfinished routing decision.
-- Past picks in `routing-history.md` rank a candidate up and get surfaced —
-  they never skip the question, hide a runner-up, or beat the stack filter.
-- The routing history records task shape and capability names only. Never
-  write prompt content, client names, URLs or credentials into it.
-- Never construct a single-option AskUserQuestion — plain text or a
-  multiple-choice with real context-derived options instead.
-- Unresolved scope ambiguity gets a sensible default + inline `[?]` note, not
-  a blocked delivery. `/interview-me` only on explicit user opt-in, after
-  delivery.
-- Never name a capability absent from the current session listing.
-- Embedded `/skill` names must be exactly as listed (slash + registered name).
-- Preserve the user's intent and voice — polish and structure it, don't inflate
-  it with requirements they never implied.
-- Code-writing tasks always get a trailing code-review + verify pair —
-  automatic, not conditional on being asked. Use `/code-review` + `/verify`
-  when installed; otherwise the subagent/prose fallback.
-- Plan/spec-producing tasks always get routed to render as a commentable HTML
-  artifact, never a bare `.md`.
-- These two rules name specific skills. Apply the named skill only when it is
-  in the current session's listing — never emit a `/skill` the user doesn't
-  have. This skill must degrade gracefully in any environment.
+**Open with the self-invocation line.** Pasting text does not fire the
+editor's slash-command autocomplete, and only one slash command can lead a
+message, so a multi-task prompt is impossible to UI-tag by design. Every
+prompt therefore opens by telling the receiving session to invoke each named
+skill itself via the Skill tool — that line is what turns `/names` from inert
+text into real invocations. Use exactly the registered names.
+
+**The prompt is never a second source of truth.** Every fact already has a
+home: the conversation window, a playbook, a README, the code itself. Point
+at the home and let the session read it. A fact copied into the prompt forks
+from its original and ages independently, and a stale copy asserted as
+current is worse than a pointer. One rule, governing three habits — skip the
+context preamble when the prompt is pasted back into the same conversation,
+reference files by path instead of reproducing them, and date-stamp anything
+drawn from memory or a compacted turn ("as of `<date>`, verify").
+
+Carry a context block only for a fresh-session paste, or for a fact that is
+costly to get wrong and not inferable: a hard constraint, a destructive-action
+guard, a credential boundary. Two or three lines is a normal block.
+
+**One paragraph, one line.** Write each paragraph unbroken, however long,
+breaking only between paragraphs and between tasks. A paste box reflows text
+that holds no newlines; hard-wrapped text keeps its breaks and visibly wastes
+half the box. (This file wraps because it is read, never pasted.)
+
+**Tag each task `[effort: low|medium|high]`.** Mechanical work is low;
+judgment-heavy design and adversarial verification are high. A second routing
+axis alongside which capability runs it.
+
+**Every agent task names its artifact.** A dispatched agent runs out of sight,
+and a summary is where a check that never happened becomes "verified". Write
+into the task: report at checkpoints, return the specific artifact for that
+check shape, and surface findings verbatim, failures included. State that
+"verified" with nothing attached is a failed task. Mark independent tasks
+parallelizable, except where they touch the same files or canvas.
+
+**Route against the live listing** of Skills, subagents and MCP tools in the
+current session, using exact registered names. Flag whatever needs auth, sits
+disconnected, or carries a setup precondition.
+
+**Keep the user's voice.** Polish and structure what they wrote; resist
+adding requirements they never implied.
+
+Success criteria are mandatory — a prompt with no definition of done is not
+yet polished.
+
+## Standing rules
+
+Applied every run, never asked about. Both name specific skills: use each one
+only when it is in the session listing, otherwise the documented fallback,
+noted as a flag. This skill has to degrade gracefully in any environment.
+
+- Tasks that write or modify code get a trailing code-review and verification
+  pair (`/code-review`, then `/verify`).
+- Tasks that produce a plan or spec render it as a commentable HTML artifact
+  rather than a bare `.md`, where submitted comments become revisions to it.
+
+Mechanics, fallbacks, the output template and the evidence table all live in
+`reference/routing-guide.md`.
