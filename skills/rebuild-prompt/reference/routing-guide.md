@@ -278,12 +278,17 @@ When the plan is ready, publish it as an interactive HTML artifact (Artifact too
 Done = <success criteria for the whole prompt — what the user reviews>.
 ​```
 
-<At five tasks or more, the block above stops after round one and closes with:>
+<A segment that ends at a model or effort switch closes with this line INSIDE the block, and the next segment is delivered as its own separate fenced block, repeating the self-invocation line:>
 ​```
-Report back with: <the results that decide the next round>.
-Then re-run /rebuild-prompt with those results to get round two.
+Stop here. Switch this session to claude-opus-5 at xhigh before continuing, then paste the next block.
 ​```
-**Later rounds (provisional):** <one line per remaining task — name + expected capability>.
+
+<A segment that ends at a finding closes with these two lines instead — the next block is NOT pre-written:>
+​```
+Report back with: <the results that decide the next segment>.
+Then re-run /rebuild-prompt with those results to get the next one.
+​```
+**Remaining segments (provisional):** <one line each — task name + expected capability + model>.
 
 **Why these skills:**
 | Task | Capability | Why |
@@ -367,33 +372,98 @@ SKILL.md under *Writing the prompt body*; don't restate them here.
   not polished.
 - Keep it as short as completeness allows. Polish = density, not length.
 
-## Rounds — cutting a long prompt where it goes stale
+## Segments — where a prompt gets cut
 
-At five tasks or more, deliver **round one only**. The cut goes at the first
-point where a finding would change what comes after it: the end of a
+A rebuilt prompt is delivered as **one fenced block per segment**, not one
+block for the whole job. Three things open a segment boundary. Any one of them
+is enough; task count alone is not.
+
+### Boundary 1 — a model or effort switch
+
+A directly-run task inherits whatever model the session is set to. One message
+runs on one model, so a task tagged for a different model than the task before
+it **does not get that model** unless the prompt stops and the user changes the
+setting. The tag is a promise the block boundary keeps.
+
+Close the segment with the switch instruction, naming both values explicitly:
+
+```
+Stop here. Switch this session to <model> at <effort> before continuing, then paste the next block.
+```
+
+Name the model in full (`claude-sonnet-5`, not "Sonnet") — the user is about to
+select it from a list, and the exact string is what they are matching against.
+
+Two exemptions, so blocks do not fragment for no gain:
+
+- **Subagent tasks never force a stop.** A dispatched agent carries its own
+  model and effort, set at dispatch. A task routed to a subagent can name any
+  model without the session needing to change.
+- **A one-rung effort change inside the same model stays in the block.** Tag it
+  (`[model: claude-opus-5 | effort: medium]` after a `high` task) and note it in
+  a clause, but do not break the block — the cost of an extra paste exceeds
+  what one rung buys. Two rungs or more, or any model change, breaks it.
+
+### Boundary 2 — a finding that changes what follows
+
+The first point where a result would rewrite the next task: the end of a
 diagnosis, an audit, a spike, a design decision. Everything before that cut is
-writable now; everything after it is a guess dressed as a plan.
+writable now; everything after it is a guess dressed as a plan. Past five
+tasks, assume at least one such boundary exists and go find it.
 
-Round one's block ends with two lines:
+Close the segment with:
 
 ```
-Report back with: <the specific results that decide the next round>.
-Then re-run /rebuild-prompt with those results to get round two.
+Report back with: <the specific results that decide the next segment>.
+Then re-run /rebuild-prompt with those results to get the next one.
 ```
 
-Follow the block with the remaining rounds as **one line each** — task name
-plus the capability you expect to route to — so the user can see the whole
-arc without receiving stale instructions for it. Mark that outline as
-provisional, because re-planning against real results is the point of cutting
-here at all.
+This boundary differs from a model switch in what the user does next. A switch
+says *change a setting and paste the block I already gave you*; a finding says
+*come back to the skill so the next block can be written against what actually
+happened*. Never write the finding boundary as a switch — handing over a
+pre-written next block defeats the entire reason for cutting there.
 
-Two other reasons to open a round boundary, even under five tasks:
+### Boundary 3 — an approval only the user can give
 
-- **A model change.** Direct-session work can only switch models between
-  messages, so a task tagged for a different model needs its own round.
-- **An approval the user must give.** A destructive, outward-facing, or
-  irreversible step belongs at the start of a round, not buried mid-prompt
-  where the session reaches it unattended.
+A destructive, outward-facing, or irreversible step starts a segment rather
+than sitting buried mid-block where the session reaches it unattended.
+
+### Why separate blocks, not markers
+
+A stop marker inside a block the user pastes whole is a marker the session runs
+straight past — it has the whole instruction set in front of it and no reason
+to honour a line telling it to wait. Physical separation is the only version
+that holds.
+
+### The outline that follows
+
+After the last delivered block, list the remaining segments **one line each** —
+task name plus the capability and model expected — so the user sees the whole
+arc without receiving stale instructions for it. Mark it provisional. For a
+finding boundary it genuinely is provisional; re-planning against real results
+is the point of cutting there.
+
+## The model plan
+
+Every delivery leads with a model plan, above the first fenced block, so the
+user knows the shape before pasting anything:
+
+```markdown
+**Model plan** — 2 sessions.
+
+| Segment | Model | Effort |
+|---|---|---|
+| 1 — audit the current schema | `claude-sonnet-5` | `medium` |
+| 2 — implement the migration | `claude-opus-5` | `xhigh` |
+```
+
+When every task shares one model and effort, drop the table and say it in a
+line: *"Model plan: one session, `claude-opus-5` at `xhigh` throughout — no
+switching."* The reassurance is the useful part; a one-row table is noise.
+
+State the session count in the heading. "3 sessions" tells the user what they
+are committing to more directly than three table rows do.
 
 ## Reminders
 
@@ -408,8 +478,13 @@ Two other reasons to open a round boundary, even under five tasks:
 - Never build a single-option AskUserQuestion. No natural choice set → plain
   text, or offer known context (recent projects, prior memories) as real
   multiple-choice options.
-- Offer `grilling` after delivery when the *premise* deserves stress-testing —
-  whether the thing is worth building at all, whether the approach holds.
-  Offer `/interview-me` instead when the premise is settled and the gap is
-  missing requirements. Both only on opt-in, always after the prompt lands.
+- `grilling` runs at step 0, before decomposition — not as a post-delivery
+  offer. Skip it only for a trivial single mechanical task, and say in one
+  line that it was skipped so the user can ask for it anyway.
+- Offer `/interview-me` after delivery when what remains is missing
+  requirements rather than a questionable premise. The premise was already
+  tested at step 0, so this is a narrower offer than it used to be.
+- The deliverable is one fenced block **per segment**, each repeating the
+  self-invocation line, with the model plan above the first block. Never
+  deliver a multi-segment job as one block with stop markers inside it.
 - After delivering the final prompt: stop. The user runs it themselves.

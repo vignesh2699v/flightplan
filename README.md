@@ -20,12 +20,15 @@ The capability was installed. It just never got picked.
 
 Given a rough prompt, `rebuild-prompt`:
 
-1. **Decomposes** it into ordered tasks with dependencies.
-2. **Shortlists 2–3 real candidate skills/agents per task** — ranked, each
+1. **Grills the premise first** — what you're actually trying to achieve, not
+   just what you asked for. Skipped for trivial one-task prompts.
+2. **Decomposes** it into ordered tasks with dependencies.
+3. **Shortlists 2–3 real candidate skills/agents per task** — ranked, each
    with *why it ranked there*, including why the runners-up lost.
-3. **Lets you choose** which capability runs each task.
-4. **Returns a finished prompt** with your chosen skills embedded per task,
-   success criteria written in, and any unresolved scope marked inline.
+4. **Lets you choose** which capability runs each task.
+5. **Returns a finished prompt** with your chosen skills embedded per task,
+   a model and effort level on each, success criteria written in, and any
+   unresolved scope marked inline.
 
 The shortlist step is the point. Routing decisions made silently are
 routing decisions you can't overrule.
@@ -115,10 +118,16 @@ this prompt", or "add the right skills to this".
 - **One task, one obvious capability → no questions.** The shortlist only
   appears when there's a real choice in it. Asking you to confirm an
   uncontested pick is the same friction the skill exists to remove.
-- **Long prompts arrive one round at a time.** Past ~5 tasks, you get round
-  one written in full plus a one-line outline of what follows, cut at the
-  first point where a finding would change the plan. You run it, come back
-  with results, and round two gets planned against what actually happened.
+- **Prompts arrive one segment at a time, one fenced block each.** A block
+  ends wherever the next task needs a different model, wherever a finding
+  would change what follows, or wherever an irreversible step needs your
+  approval — not at a fixed task count.
+- **A model switch is a hard stop, not a suggestion.** If segment two needs a
+  different model than segment one, segment one ends by naming the exact model
+  and effort to switch to before you paste the next block. Subagent tasks are
+  exempt: a dispatched agent carries its own model, so it never interrupts you.
+- **Every delivery opens with a model plan** — how many sessions this job
+  takes and which model runs each, before you paste anything.
 - **It remembers what you picked.** Past choices are recorded per task shape
   and surface in later shortlists as a ranking signal — never as a decision
   made on your behalf.
@@ -140,11 +149,17 @@ environment.
 
 A few decisions that came out of testing it against real prompts:
 
-- **It doesn't interview you.** An earlier version ran a requirements
-  interview before delivering. In practice that produced unanswered
-  question rounds that just delayed the thing you asked for. Scope
-  ambiguity now gets a sensible default plus an inline `[?]` flag in the
-  delivered prompt. The only gate is your choice of capability.
+- **It grills you, but it doesn't interview you.** An early version ran a
+  requirements interview before delivering, and it produced unanswered
+  question rounds that just delayed the thing you asked for — so it was cut,
+  and the rule became "prompt before questions." That rule has now been
+  partly reversed, deliberately: a stress-test of the *premise* runs first,
+  because it's a different animal from a requirements checklist. An interview
+  asks what you want built; grilling asks whether you're pointed at the right
+  problem, and the answer changes how the work decomposes — which changes what
+  gets routed. So it has to run before the shortlist, not after. Requirements
+  ambiguity is still handled the old way: a sensible default plus an inline
+  `[?]` in the delivered prompt, never a question round.
 - **It never collapses the task→skill mapping.** A multi-task prompt with
   one skill list at the top loses the routing, which is the whole value.
 - **No context preamble by default.** An earlier version opened every
@@ -224,12 +239,18 @@ A few decisions that came out of testing it against real prompts:
   point where a finding would change what follows, and hands back a re-entry
   line: run it, return with results, and round two gets *planned* against
   them rather than guessed ahead of them.
-- **Model choice and round boundaries are the same decision.** A per-task
+- **Model choice and block boundaries are the same decision.** A per-task
   model tag is only enforceable where a model boundary exists. Subagents take
   their own model and effort, so it binds there; a directly-run task inherits
   the session's model, and one message runs on one model. That makes "route
-  this to Sonnet" and "cut the prompt here" the same instruction, which is
-  why the tag and the round mechanism shipped together.
+  this to Sonnet" and "cut the prompt here" the same instruction — the tag was
+  decoration until the cut existed to keep its promise.
+- **Stop markers inside a block don't stop anything.** The first design put
+  "switch models here" markers inside one long prompt. A session handed the
+  whole instruction set has no reason to honour a line telling it to wait —
+  it can see what comes next, so it does it. Physical separation into
+  one-block-per-segment is the only version that holds, and it costs you a
+  paste per segment.
 - **Anthropic's own guidance broke a flagship feature.** The published model
   guidance says explicitly that telling a session to verify its own work
   causes over-verification and buys nothing. The skill's headline standing

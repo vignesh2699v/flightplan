@@ -11,11 +11,31 @@ output is a prompt, never an executed task. Deliver it, then stop.
 
 ## The pipeline
 
+### 0. Grill the premise
+
+Run `grilling` on the raw prompt before decomposing anything. What it is for:
+the goal behind the request, the context the user did not think to state, and
+the assumption that would make the whole prompt point at the wrong thing. It
+is not a requirements checklist — a prompt built from a stated request routes
+the request, and a prompt built from the goal behind it routes the goal.
+
+Grilling runs before the ballot, never between ballot and delivery. What it
+surfaces changes how the work decomposes, and decomposition is what routing
+keys off; findings that arrive after the ballot arrive too late to move
+anything.
+
+**Skip it only when the job is trivial** — one mechanical task with an obvious
+capability, where the request and the goal are plainly the same thing. Say in
+one line that it was skipped and why, so the user can ask for it anyway.
+
+Done when the goal behind the request is stated, along with whatever
+constraint or context the raw prompt left implicit.
+
 ### 1. Decompose, then size
 
-Read the raw prompt and find the real intent. Split multiple tasks and order
-them by dependency. Look up what you can — memory, project files — rather
-than asking about it.
+Read the raw prompt, plus whatever grilling surfaced, and find the real
+intent. Split multiple tasks and order them by dependency. Look up what you
+can — memory, project files — rather than asking about it.
 
 Then **size** the job, because size picks the route:
 
@@ -24,7 +44,7 @@ Then **size** the job, because size picks the route:
 | One task, one candidate no runner-up seriously threatens | Skip the ballot. Name the pick and the nearest runner-up in a line each, deliver. |
 | One task, contested | One ballot question, deliver. |
 | Two to four tasks | Full ballot, one prompt, every task. |
-| Five or more tasks | Full ballot, deliver round one only (step 3). |
+| Five or more tasks | Full ballot, deliver segment one only (step 3). |
 
 The ballot exists to surface a real choice. A single-task prompt with one
 obvious capability has no choice in it, and asking anyway turns the skill's
@@ -72,25 +92,42 @@ Write the prompt in the fenced-code template from
 own invocation. The task→skill mapping is the routing value — a multi-task
 prompt collapsed under a single skill list has thrown it away.
 
-**At five tasks or more, deliver one round.** Round one runs up to the first
-point where a finding would change what comes after it. Write those tasks in
-full, outline the remainder in a line each, and close the round by telling the
-session to report its results and telling the user to re-run `/rebuild-prompt`
-with them to get round two. A task written before the work that informs it has
-run is a guess; re-planning it against what actually happened is the whole
-reason to cut the prompt there. A round is also where a model can change — one
-message runs on one session model, so the round boundary is the only place
-routing to a different one takes effect.
+**Lead with the model plan.** Above the prompt, a two-column table of segment
+→ model and effort, so the user sees before pasting anything whether this job
+runs in one session or several. When every task shares one model and effort,
+say so in a line instead of drawing a table.
+
+**Cut at every boundary and deliver one fenced block per segment.** Three
+things open one: a **model or effort change** on directly-run work, a
+**finding** that would rewrite what comes next, or an **irreversible step**
+needing the user's approval before it runs. Task count opens nothing by
+itself.
+
+The two common boundaries close differently, and confusing them is the failure
+worth naming. A model boundary closes by stating the model and effort to switch
+to, with the next block already written — a direct task inherits the session's
+setting, so the tag means nothing unless the prompt stops there. A finding
+boundary closes by asking for the results and sending the user back to
+`/rebuild-prompt`, because the next segment should be planned against what
+happened rather than guessed ahead of it; handing over a pre-written block
+there defeats the whole reason for cutting. Past five tasks, assume at least
+one finding boundary exists and go find it.
+
+Separate blocks rather than markers inside one block: a marker in a block the
+user pastes whole is a marker the session runs straight past.
+
+`reference/routing-guide.md` carries the exemptions that stop blocks
+fragmenting, and the exact closing line for each boundary type.
 
 Default anything ambiguous and mark it `[?]` inline with what you assumed and
-why. Follow the block with a short "why these skills" table and any
+why. Follow the blocks with a short "why these skills" table and any
 availability flags, then stop.
 
-The capability ballot is the only gate. Scope questions get a default and a
-`[?]` — a held-back prompt has repeatedly produced unanswered question rounds
-that only delayed the one thing the user asked for. Afterwards, offer
-`grilling` when the premise deserves stress-testing, or `/interview-me` when
-the gap is missing requirements rather than a questionable premise.
+The capability ballot is the only gate left — the premise was already tested
+at step 0. Scope questions get a default and a `[?]`; a held-back prompt has
+repeatedly produced unanswered question rounds that only delayed the one thing
+the user asked for. Afterwards, offer `/interview-me` when what remains is
+missing requirements rather than a questionable premise.
 
 Done when every line of the delivered prompt passes **"would the task go
 wrong without this?"** Task bodies bloat as readily as context preambles do,
@@ -103,14 +140,15 @@ editor's slash-command autocomplete, and only one slash command can lead a
 message, so a multi-task prompt is impossible to UI-tag by design. Every
 prompt therefore opens by telling the receiving session to invoke each named
 skill itself via the Skill tool — that line is what turns `/names` from inert
-text into real invocations. Use exactly the registered names.
+text into real invocations. Use exactly the registered names. Every segment
+carries its own copy: each one is pasted into a fresh turn.
 
 **Say why, once.** One sentence on what the work is for and what the output
 enables. This is the single line exempt from the pruning test: a model given
 the reason behind a request connects it to the right context instead of
 inferring intent, and that lift is worth more than the sentence costs. Intent
 is not the same as background — the exemption covers why the task matters, not
-a history of the project.
+a history of the project. Grilling at step 0 is where this sentence comes from.
 
 **The prompt is never a second source of truth.** Every fact already has a
 home: the conversation window, a playbook, a README, the code itself. Point
@@ -123,7 +161,9 @@ drawn from memory or a compacted turn ("as of `<date>`, verify").
 
 Carry a context block only for a fresh-session paste, or for a fact that is
 costly to get wrong and not inferable: a hard constraint, a destructive-action
-guard, a credential boundary. Two or three lines is a normal block.
+guard, a credential boundary. Two or three lines is a normal block. A segment
+that follows a model switch is a fresh paste by definition — carry forward the
+one or two facts it cannot infer from the segment before it.
 
 **One paragraph, one line.** Write each paragraph unbroken, however long,
 breaking only between paragraphs and between tasks. A paste box reflows text
@@ -137,9 +177,10 @@ Model defaults to `claude-opus-5`; drop to `claude-sonnet-5` for
 cost-sensitive or high-volume work, `claude-haiku-4-5` for mechanical work,
 and reach for `claude-fable-5` only on the hardest, longest, most ambiguous
 jobs. The tag **binds** on a task dispatched to a subagent, which takes its
-own model and effort. On a task the session runs directly it is advisory — it
-tells the user which session to paste the round into, which is why a model
-change and a round boundary are the same event.
+own model and effort. On directly-run work it is advisory — a direct task
+inherits the session's setting — so a tag that differs from the one before it
+is only real if the prompt stops there and asks the user to switch. Tag and
+boundary are the same decision.
 
 **Structure beats emphasis.** Fence hard constraints in their own XML tag
 (`<constraints>`) rather than shouting them in prose — a tagged block parses
