@@ -7,37 +7,6 @@ skills, agents, models, and effort levels already routed to each task.
 It does **not** run the prompt. It hands you one you can paste into a fresh
 session yourself.
 
-## The problem
-
-You have dozens of skills installed. You type "make my dashboard less
-generic and check the performance" and get a generic response, because
-nothing routed that to the dedicated data-viz skill, the de-slop skill, and
-a performance-benchmarking agent.
-
-The capability was installed. It just never got picked.
-
-## What it does
-
-Given a rough prompt, `rebuild-prompt`:
-
-1. **Grills the premise first** — what you're actually trying to achieve, not
-   just what you asked for. Skipped for trivial one-task prompts.
-2. **Decomposes** it into ordered tasks with dependencies.
-3. **Shortlists 2–3 real candidate skills/agents per task** — ranked, each
-   with *why it ranked there*, including why the runners-up lost.
-4. **Lets you choose** which capability runs each task.
-5. **Returns a finished prompt** — one fenced block per segment, each task
-   tagged with a model and effort level, success criteria written in, and any
-   unresolved scope marked inline. If a task needs a different model than the
-   one before it, the segment ends there and tells you exactly what to switch
-   to before pasting the next one.
-
-The shortlist step is the point. Routing decisions made silently are
-routing decisions you can't overrule.
-
-**No other skill is a hard dependency** — see
-[Requirements](#requirements) for how each step degrades when one's missing.
-
 ## Example
 
 **In:**
@@ -78,6 +47,41 @@ Then re-run /rebuild-prompt with those results to get the next segment.
 ...plus a table showing which capabilities were considered and why each was
 picked or passed over.
 
+## The problem
+
+You have dozens of skills installed. You type "make my dashboard less
+generic and check the performance" and get a generic response, because
+nothing routed that to the dedicated data-viz skill, the de-slop skill, and
+a performance-benchmarking agent.
+
+The capability was installed. It just never got picked.
+
+## What it does
+
+Given a rough prompt, `rebuild-prompt`:
+
+1. **Grills the premise first** — what you're actually trying to achieve, not
+   just what you asked for. Skipped for one trivial, obvious task.
+2. **Decomposes** it into ordered tasks with dependencies, and classifies
+   each one as uncontested (one obvious capability) or contested (a real
+   choice between 2+).
+3. **Shortlists 2–3 real candidates for every contested task** — ranked,
+   each with *why it ranked there*, including why the runners-up lost. An
+   uncontested task's pick is stated in the output instead of asked about —
+   this applies task-by-task, not by how many tasks the job has.
+4. **Lets you choose** which capability runs each contested task.
+5. **Returns a finished prompt** — one fenced block per segment, each task
+   tagged with a model and effort level, success criteria written in, and any
+   unresolved scope marked inline. If a task needs a different model than the
+   one before it, the segment ends there and tells you exactly what to switch
+   to before pasting the next one.
+
+The shortlist step is the point. Routing decisions made silently are
+routing decisions you can't overrule.
+
+**No other skill is a hard dependency** — see
+[Requirements](#requirements) for how each step degrades when one's missing.
+
 ## Install
 
 Clone into your personal skills directory:
@@ -107,8 +111,8 @@ ls ~/.claude/skills/rebuild-prompt
 /rebuild-prompt <your rough prompt>
 ```
 
-You'll get a shortlist of candidate capabilities per task, pick one for
-each, then receive the finished prompt.
+You'll get a shortlist of candidate capabilities for each contested task,
+pick one for each, then receive the finished prompt.
 
 It also activates on natural phrasing like "rebuild this prompt", "polish
 this prompt", or "add the right skills to this".
@@ -131,9 +135,10 @@ this prompt", or "add the right skills to this".
   *which* capability runs it. Binding on subagent tasks, which take their own
   model and effort; advisory on direct work, where it tells you which session
   to paste the segment into.
-- **One task, one obvious capability → no questions.** The shortlist only
-  appears when there's a real choice in it. Asking you to confirm an
-  uncontested pick is the same friction the skill exists to remove.
+- **An uncontested pick never blocks you, at any job size.** Whether the
+  prompt has one task or five, a capability with no real runner-up is stated
+  in the output, not asked about. Only a genuinely contested task pauses for
+  a question.
 - **Prompts arrive one segment at a time, one fenced block each.** A block
   ends wherever the next task needs a different model, wherever a finding
   would change what follows, or wherever an irreversible step needs your
@@ -159,15 +164,17 @@ documented fallback otherwise — see Requirements below.
 - Routes against whatever skills, agents, and MCP tools you already have.
   It never invents a capability name — with nothing installed, it still
   produces a well-structured prompt, just with fewer skills attached.
-- **No other skill is a hard dependency**, including `grilling`. What the
-  prompt *routes to* thins out as you install less, down to a prompt with no
-  `/skill` lines at all — structure, model and effort tags, constraints and
-  success criteria still intact. What the pipeline *does* never stops:
-  missing `grilling` means the premise gets grilled inline instead; an empty
-  candidate field means the shortlist step skips itself rather than asking
-  you to pick from one option. Every substitution and every skipped step is
-  named in the Flags section, because a fallback you weren't told about is
-  indistinguishable from the feature working.
+- **No other skill is a hard dependency**, including `grilling` — a
+  personal, unpublished skill (there's no public source to link; if you
+  don't have it, the pipeline grills inline instead, no install needed).
+  What the prompt *routes to* thins out as you install less, down to a
+  prompt with no `/skill` lines at all — structure, model and effort tags,
+  constraints and success criteria still intact. What the pipeline *does*
+  never stops: missing `grilling` means the premise gets grilled inline
+  instead; an empty candidate field means the shortlist step skips itself
+  rather than asking you to pick from one option. Every substitution and
+  every skipped step is named in the Flags section, because a fallback you
+  weren't told about is indistinguishable from the feature working.
 
 ## Design notes
 
@@ -190,6 +197,12 @@ to release, see [CHANGELOG.md](CHANGELOG.md).
   line survives only if the task would break or go wrong without it, and
   anything sourced from memory is marked "as of `<date>`, verify" rather
   than asserted.
+- **Model IDs are a snapshot, not a fact.** The skill's own model/effort
+  guidance is a fact that lives outside it — Anthropic ships new models
+  faster than this repo gets updated. So the guidance is one dated line,
+  explicitly flagged for re-verification, not a table asserted as current.
+  Same discipline the skill demands of every prompt it writes, applied to
+  itself.
 - **Intent isn't background.** The pruning test — "would the task go wrong
   without this?" — would strip the sentence explaining *why* the work
   matters along with everything else that doesn't change the mechanics. But
@@ -223,12 +236,13 @@ to release, see [CHANGELOG.md](CHANGELOG.md).
   tasks get exactly one reviewer, in a separate context, and re-checking
   language is banned from the task body itself.
 - **Routing history is a signal, not a preference lock.** The shortlist step
-  asks you the same judgement call repeatedly. Picks are logged per task
-  shape in a local `routing-history.md` beside the skill, and a matching
-  past pick gets flagged and ranked up one position. It never auto-applies,
-  never hides a runner-up, and always loses to the stack filter. The log
-  stores task *shape* and capability names only — never your prompt text.
-  For a project-scoped install, gitignore it: it's local preference data.
+  asks you the same judgement call repeatedly for contested tasks. Picks are
+  logged per task shape in `~/.claude/rebuild-prompt/history.md` — outside
+  any skill's install directory, so a reinstall or update never touches it —
+  and a matching past pick gets flagged and ranked up one position. It never
+  auto-applies, never hides a runner-up, and always loses to the stack
+  filter. The log stores task *shape* and capability names only — never your
+  prompt text.
 - **Point, don't paste.** If a fact lives in a file the executing session can
   open — a playbook, a README, a config, the code itself — the prompt names
   the path instead of copying the contents in. Copying a fact forks it: the
