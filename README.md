@@ -144,6 +144,16 @@ environment.
 - Routes against whatever skills, agents, and MCP tools you already have.
   It never invents a capability name — with nothing installed, it still
   produces a well-structured prompt, just with fewer skills attached.
+- **No other skill is a hard dependency**, including `grilling`. Two things
+  degrade differently here, and the distinction is deliberate: what the prompt
+  *routes to* thins out as you install less, down to a prompt with no `/skill`
+  lines at all — structure, model and effort tags, constraints and success
+  criteria still intact. But what the pipeline *does* never stops. Missing
+  `grilling` means the premise gets grilled inline instead; an empty candidate
+  field means the shortlist step skips itself rather than asking you to pick
+  from one option. Every substitution and every skipped step is named in the
+  Flags section, because a fallback you weren't told about is indistinguishable
+  from the feature working.
 
 ## Design notes
 

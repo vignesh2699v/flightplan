@@ -28,6 +28,16 @@ anything.
 capability, where the request and the goal are plainly the same thing. Say in
 one line that it was skipped and why, so the user can ask for it anyway.
 
+**When `grilling` is absent from the session listing, grill inline instead of
+skipping.** This step is a behaviour, not a dependency. Ask what the user is
+actually trying to achieve, what changes for them if it works, what they have
+already ruled out and why, and which assumption would be most expensive to
+have wrong. A handful of questions, driven by their answers rather than a
+fixed list. Say that the skill was unavailable so they know what they are
+getting. Naming an adjacent installed skill as an alternative is fine;
+switching to one silently is not — that is the invisible routing this skill
+exists to prevent, committed by the skill itself.
+
 Done when the goal behind the request is stated, along with whatever
 constraint or context the raw prompt left implicit.
 
@@ -83,7 +93,15 @@ the user picks, recording task *shape* and capability names only — prompts
 carry client names and internal URLs, and this file holds neither. Create it
 if it is absent.
 
-Done when every task has a capability, chosen or waived by the size gate.
+**With nothing to route to, skip the ballot and say so.** Before concluding
+the field is empty, check all three sources — a session with no installed
+skills still has subagents and MCP tools, and those are candidates. If it
+genuinely is empty, deliver with no capability line and note that nothing
+matched. A ballot holding one option is not a choice, and asking anyway wastes
+the user's turn on a decision that has already been made for them.
+
+Done when every task has a capability, chosen, waived by the size gate, or
+absent because nothing matched.
 
 ### 3. Deliver
 
@@ -141,7 +159,9 @@ message, so a multi-task prompt is impossible to UI-tag by design. Every
 prompt therefore opens by telling the receiving session to invoke each named
 skill itself via the Skill tool — that line is what turns `/names` from inert
 text into real invocations. Use exactly the registered names. Every segment
-carries its own copy: each one is pasted into a fresh turn.
+carries its own copy: each one is pasted into a fresh turn. Omit the line
+entirely when no task names a skill — an instruction to load skills that were
+never named is noise the reader has to discard.
 
 **Say why, once.** One sentence on what the work is for and what the output
 enables. This is the single line exempt from the pruning test: a model given
@@ -215,11 +235,29 @@ adding requirements they never implied.
 Success criteria are mandatory — a prompt with no definition of done is not
 yet polished.
 
+## When capabilities are missing
+
+Two different things degrade, and only one of them is allowed to.
+
+**What the prompt routes to** narrows. Fewer installed capabilities means
+shorter shortlists and eventually none, and the delivered prompt then carries
+structure, model and effort tags, constraints and success criteria with no
+`/skill` lines in it. That is a thinner output, not a failure.
+
+**What the pipeline does** never stops. Every step has to run on a bare
+install: grilling falls back to grilling inline, the ballot falls back to
+skipping itself, the review rule falls back to a subagent and then to prose. A
+step that quietly disappears because a skill is absent is a bug — the user
+cannot ask for something back when nothing told them it was gone.
+
+Name every substitution and every skipped step in the Flags section. An
+unflagged fallback is indistinguishable from the feature working.
+
 ## Standing rules
 
 Applied every run, never asked about. Both name specific skills: use each one
-only when it is in the session listing, otherwise the documented fallback,
-noted as a flag. This skill has to degrade gracefully in any environment.
+only when it is in the session listing, otherwise the fallback above, noted as
+a flag.
 
 - Tasks that write or modify code get one **fresh-context review** appended —
   `/code-review`, or a Code Reviewer subagent — whose mandate covers driving

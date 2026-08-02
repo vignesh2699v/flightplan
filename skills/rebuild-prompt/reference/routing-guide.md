@@ -20,6 +20,7 @@ Flag rather than assume:
 | Needs auth | Note it under Flags — the user must authorize before running the prompt |
 | Disconnected | Pick a fallback or note the gap |
 | Setup precondition | State the exact command to run first (e.g. a CLI setup step) |
+| Absent, and a pipeline step needed it | Run the documented fallback, and flag which step substituted (see SKILL.md § When capabilities are missing) |
 
 ## Building the shortlist (2–3 candidates per task)
 
@@ -480,10 +481,13 @@ are committing to more directly than three table rows do.
   multiple-choice options.
 - `grilling` runs at step 0, before decomposition — not as a post-delivery
   offer. Skip it only for a trivial single mechanical task, and say in one
-  line that it was skipped so the user can ask for it anyway.
+  line that it was skipped so the user can ask for it anyway. When the skill
+  is not installed, grill inline rather than dropping the step.
 - Offer `/interview-me` after delivery when what remains is missing
-  requirements rather than a questionable premise. The premise was already
-  tested at step 0, so this is a narrower offer than it used to be.
+  requirements rather than a questionable premise, **and only when it is in
+  the session listing**. Never offer a skill the user does not have — the
+  premise was already tested at step 0, so this is a narrow offer to begin
+  with, and a dead one is worse than none.
 - The deliverable is one fenced block **per segment**, each repeating the
   self-invocation line, with the model plan above the first block. Never
   deliver a multi-segment job as one block with stop markers inside it.
