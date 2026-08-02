@@ -96,8 +96,9 @@ this prompt", or "add the right skills to this".
 
 ## Built-in defaults
 
-- **Code-writing tasks** get an automatic code-review + verification pass
-  appended — you don't have to remember to ask.
+- **Code-writing tasks** get an automatic fresh-context review appended — you
+  don't have to remember to ask. One reviewer, in a separate context, that
+  both reads the diff and drives the change end-to-end.
 - **Plan/spec tasks** are routed to render as an interactive HTML document
   with click-to-comment sections, instead of a bare `.md` file, so review
   comments become plan revisions.
@@ -106,13 +107,23 @@ this prompt", or "add the right skills to this".
   artifact it must return. "Verified" with nothing attached is a failed task.
 - **Every prompt self-invokes its skills** — it opens with a line telling the
   receiving session to load each named skill itself via the Skill tool.
-- **Every task carries an effort hint** (`[effort: low|medium|high]`) — a
-  second routing axis alongside *which* capability runs it.
+- **Every task carries a model and effort hint**
+  (`[model: claude-opus-5 | effort: xhigh]`) — two more routing axes alongside
+  *which* capability runs it. Binding on subagent tasks, which take their own
+  model and effort; advisory on direct work, where it tells you which session
+  to paste the round into.
+- **One task, one obvious capability → no questions.** The shortlist only
+  appears when there's a real choice in it. Asking you to confirm an
+  uncontested pick is the same friction the skill exists to remove.
+- **Long prompts arrive one round at a time.** Past ~5 tasks, you get round
+  one written in full plus a one-line outline of what follows, cut at the
+  first point where a finding would change the plan. You run it, come back
+  with results, and round two gets planned against what actually happened.
 - **It remembers what you picked.** Past choices are recorded per task shape
   and surface in later shortlists as a ranking signal — never as a decision
   made on your behalf.
 
-Both standing rules name specific skills (`/code-review`, `/verify`, and a
+Both standing rules name specific skills (`/code-review` and a
 commentable-preview skill). Each is applied **only if installed**, with a
 documented fallback otherwise — the skill degrades gracefully in any
 environment.
@@ -197,6 +208,42 @@ A few decisions that came out of testing it against real prompts:
   wastes half the box no matter how wide it is. Now every paragraph in the
   delivered prompt is one unbroken line; breaks appear only between
   paragraphs and tasks.
+- **The ballot became a toll booth for small jobs.** Every run went through
+  decompose → shortlist → AskUserQuestion → deliver, regardless of size. For
+  a one-task prompt where a single capability obviously fits, that's a
+  question with one real answer — the exact friction this skill was built to
+  remove, pointed the other way. Now a size gate at step one routes it: one
+  uncontested task skips the ballot entirely and gets the pick plus its
+  nearest runner-up in a line each, so you can still overrule without being
+  stopped to confirm.
+- **A six-task prompt is stale by task three.** The later tasks were written
+  before the earlier ones ran, so they encode assumptions the work has
+  already disproved. Checkpoint gates inside one prompt don't fix that —
+  they pause execution but the stale instructions are still sitting there.
+  So past ~5 tasks the skill now delivers round one only, cut at the first
+  point where a finding would change what follows, and hands back a re-entry
+  line: run it, return with results, and round two gets *planned* against
+  them rather than guessed ahead of them.
+- **Model choice and round boundaries are the same decision.** A per-task
+  model tag is only enforceable where a model boundary exists. Subagents take
+  their own model and effort, so it binds there; a directly-run task inherits
+  the session's model, and one message runs on one model. That makes "route
+  this to Sonnet" and "cut the prompt here" the same instruction, which is
+  why the tag and the round mechanism shipped together.
+- **Anthropic's own guidance broke a flagship feature.** The published model
+  guidance says explicitly that telling a session to verify its own work
+  causes over-verification and buys nothing. The skill's headline standing
+  rule appended exactly that shape: `/code-review` **then** `/verify`, where
+  the second step was the same session re-checking itself. Fresh-context
+  verification is the documented exception that still pays, so the pair
+  collapsed into one reviewer whose mandate covers both halves, and
+  re-checking language was banned from task bodies outright.
+- **Conciseness was fighting a documented practice.** The pruning test —
+  "would the task go wrong without this?" — was killing the sentence
+  explaining *why* the work matters, alongside the background it was meant to
+  cut. But intent isn't background: a model given the reason behind a request
+  connects it to the right context instead of inferring it. That one sentence
+  is now the single line exempt from the test.
 - **Not every task needs a skill.** Forcing one onto straightforward work
   in a well-patterned codebase makes the output worse. "None needed" is
   always an option.

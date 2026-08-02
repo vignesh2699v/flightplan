@@ -175,27 +175,37 @@ Do **not** mark tasks parallel when they touch the same files or the same
 canvas: concurrent edits to shared state conflict, and the time saved is not
 worth the corruption. Dependency ordering always wins over parallelism.
 
-## Standing rule: implementation tasks get an automatic quality gate
+## Standing rule: implementation tasks get one fresh-context review
 
-Any task in the rebuilt prompt that **writes or modifies code** automatically
-gets two steps appended after it — no need to ask, this is a default, not a
-per-run question:
+Any task in the rebuilt prompt that **writes or modifies code** gets exactly
+one step appended after it — no need to ask, this is a default, not a per-run
+question:
 
-1. **Code review** — `/code-review` if installed; otherwise dispatch a
-   code-reviewing subagent (e.g. a "Code Reviewer" agent type) if one exists;
-   otherwise state the review expectation in prose.
-2. **Verification** — `/verify` if installed; otherwise state the expectation
-   in prose: drive the change end-to-end and observe real behaviour, not just
-   run tests/typecheck.
+**A fresh-context review** — `/code-review` if installed; otherwise dispatch a
+code-reviewing subagent (e.g. a "Code Reviewer" agent type) if one exists;
+otherwise state the expectation in prose. Its mandate is both halves of the
+job: read the diff *and* drive the change end-to-end to observe real
+behaviour, rather than accepting that tests and typecheck passed.
+
+**One reviewer, not two, and never a self-check.** Anthropic's model guidance
+is explicit that instructions telling a session to verify its own work —
+"double-check your answer", "re-verify before responding", "include a final
+verification step" — trigger redundant verification on current models and cost
+tokens without improving the result. Fresh-context verification is the
+exception that still pays: a separate context catches what self-critique
+cannot see. So the appended review reads as a handoff to a different reader,
+and the task body itself carries no re-checking language. This replaces the
+older `/code-review` **plus** `/verify` pair, whose second step was a
+same-session self-check.
 
 Never emit a `/skill` name that isn't in the current session's listing — check
 first, fall back second, and flag the substitution in the Flags section.
 
-Write these as their own numbered sub-steps directly under the implementation
-task they gate, not as separate top-level tasks — they're part of "done" for
-that task, not independent work. A task that's pure content, design, research,
-or planning (nothing executable changes) does NOT get this pair — only tasks
-that touch code.
+Write the review as its own numbered sub-step directly under the
+implementation task it gates, not as a separate top-level task — it's part of
+"done" for that task, not independent work. A task that's pure content,
+design, research, or planning (nothing executable changes) does NOT get it —
+only tasks that touch code.
 
 ## Standing rule: plan-shaped tasks render as a commentable HTML document
 
@@ -238,29 +248,42 @@ which is the mechanism that actually works.
 ​```
 As you reach each task below, invoke the skill named in it via the Skill tool before doing that task's work. The /names are instructions to you, not decorative text — load each one yourself; I have not tagged them.
 
-<Overall goal in the user's voice, one or two sentences — on ONE unbroken line.>
+<Overall goal in the user's voice, one or two sentences — on ONE unbroken line — ending with why it matters and what the output enables. That reason is the one line exempt from the pruning test.>
 
-<NO context block by default — the prompt is normally pasted back into the same conversation, which already holds these facts. Include one ONLY for a fresh-session paste, or for a fact that is costly to get wrong and not inferable (a hard constraint, a destructive-action guard). When included, keep it to a few lines that pass "would the task break without this?" — IDs, paths, hard constraints, non-obvious gotchas. Never project history. Mark anything from memory as "as of <date>, verify" rather than as fact.>
+<NO context block by default — the prompt is normally pasted back into the same conversation, which already holds these facts. Include one ONLY for a fresh-session paste, or for a fact that is costly to get wrong and not inferable. When included, keep it to a few lines that pass "would the task break without this?" — IDs, paths, non-obvious gotchas. Never project history. Mark anything from memory as "as of <date>, verify" rather than as fact.>
+
+<constraints>
+<hard constraints, destructive-action guards, credential boundaries — one per line, in the user's own words. Omit the whole block if there are none.>
+</constraints>
 
 <setup preconditions, e.g. CLI commands to run first — keep, these are actionable, not background>
 
-## Task 1 — <task name, involves writing/modifying code>   [effort: high]
-Use /<skill-a> (and /<skill-b> if the task truly spans two domains).
-<What to do, requirements, constraints — one unbroken line per paragraph.>
-Then: run /code-review on the changes; then run /verify to confirm the change actually works end-to-end, not just that tests/typecheck pass.
+Deliver what is asked at the scope intended; if a better approach exists, say so in a sentence and continue with the task as asked. Delegate to a subagent only for genuinely independent, sizeable tracks — never to double-check your own work — and keep spawn counts low. Local reversible edits proceed; anything destructive, outward-facing, or hard to undo asks first.
 
-## Task 2 — <verification/QA-shaped task>  (after Task 1)   [effort: high]
+## Task 1 — <task name, involves writing/modifying code>   [model: claude-opus-5 | effort: xhigh]
+Use /<skill-a> (and /<skill-b> if the task truly spans two domains).
+<What to do, requirements — one unbroken line per paragraph. No "double-check" or "verify before responding" language: the review step below is the check.>
+Then: hand the change to /code-review as a fresh reader — it reads the diff and drives the change end-to-end to see real behaviour, not just that tests and typecheck passed.
+
+## Task 2 — <verification/QA-shaped task>  (after Task 1)   [model: claude-opus-5 | effort: xhigh]
 Dispatch the <Agent Name> agent (e.g. Code Reviewer, Evidence Collector, Performance Benchmarker — whichever fits the check being asked for). ← agents/MCP tools are named as instructions, not slashes
 <What to verify/do.>
 Report each check before running it and its result immediately after, then return <the specific artifact: fresh-load screenshots at every breakpoint / before-after numbers with method / actual command output>. "Verified" with nothing attached is a failed task. Surface whatever comes back verbatim, failures included.
 
-## Task 3 — <plan/spec-producing task>   [effort: medium]
+## Task 3 — <plan/spec-producing task>   [model: claude-sonnet-5 | effort: high]
 Use /superpowers:writing-plans (or /interview-me, whichever fits).
 <What the plan needs to cover.>
 When the plan is ready, publish it as an interactive HTML artifact (Artifact tool) reusing /interview-me's commentable-preview mechanism — click-to-comment sections + a Revise action — instead of a bare .md file. Treat submitted comments as revision requests for the plan.
 
 Done = <success criteria for the whole prompt — what the user reviews>.
 ​```
+
+<At five tasks or more, the block above stops after round one and closes with:>
+​```
+Report back with: <the results that decide the next round>.
+Then re-run /rebuild-prompt with those results to get round two.
+​```
+**Later rounds (provisional):** <one line per remaining task — name + expected capability>.
 
 **Why these skills:**
 | Task | Capability | Why |
@@ -272,56 +295,67 @@ Done = <success criteria for the whole prompt — what the user reviews>.
 ```
 
 **The skill names above are illustrative.** The example assumes `/code-review`,
-`/verify`, `/interview-me` and a plan-writing skill are installed. Substitute
-whatever the current session actually has, and use the documented fallbacks
-when they're absent.
+`/interview-me` and a plan-writing skill are installed. Substitute whatever the
+current session actually has, and use the documented fallbacks when they're
+absent.
 
 **Never collapse the mapping.** A multi-task prompt with a single skill list at
 the top loses the routing — the per-task skill assignment is the core value of
 this output. Single-task prompts may use a single header line instead.
 
-## Effort annotations
+**Single-task shortcut.** When the prompt holds one task and one capability no
+runner-up seriously threatens, the ballot is skipped (see SKILL.md step 1).
+The output shrinks to match: the fenced block with one header line, then two
+lines instead of the "why these skills" table — the pick and its reason, and
+the nearest runner-up and why it lost. The user can still overrule; they just
+aren't stopped to confirm a choice that wasn't contested.
 
-Tag each task with a `[effort: low|medium|high]` hint after its heading —
-a second routing axis alongside *which* capability runs it:
+## Model and effort annotations
 
-- **low** — mechanical, well-specified work with a clear right answer
-  (formatter fixes, renames, applying an approved plan step, de-slop sweeps).
-- **medium** — normal implementation and design work.
-- **high** — judgment-heavy or adversarial work: architecture decisions,
-  structural design refinement, verification that must actually catch
-  problems, anything where a shallow pass produces confident-but-wrong
-  output.
+Tag each task `[model: <id> | effort: <level>]` after its heading — two more
+routing axes alongside *which* capability runs it.
 
-These are advisory. Harnesses that support per-agent effort can consume them
-directly; in a plain chat session they still steer how much care the model
-gives each task. Keep them to the three levels — don't invent a scale.
+**Effort** runs the full ladder, not three levels:
 
-Rules for the prompt body:
+| Level | Use for |
+|---|---|
+| `low` | Mechanical, well-specified work with a clear right answer — renames, formatter fixes, applying an approved plan step. Also the primary lever when latency matters. |
+| `medium` | Normal implementation and design work; the cost-saving step down from the default. |
+| `high` | The API default. Judgment-heavy work: architecture decisions, structural design refinement, checks that must actually catch problems. |
+| `xhigh` | The recommended setting for the hardest coding and agentic work — not an exotic escalation. |
+| `max` | Maximum capability, no token constraint. Can overthink simpler tasks; reserve it for correctness-over-cost cases. |
 
-- **Point, don't paste.** Before inlining any fact, ask where it already
-  lives. If it's in a file the executing session can open — a playbook, a
-  README, a config, a memory file, the code itself — name the path and let
-  it go read it. Inline only what exists nowhere else, or what the session
-  would not think to look for. Copying a documented list (parser gotchas,
-  setup steps, conventions) into the prompt makes it longer *and* forks the
-  fact: the copy in the prompt ages while the original moves on, and a
-  stale copy asserted as current is worse than a pointer. The test is
-  **"can the session read this itself?"** — if yes, point at it. This is the
-  same reasoning as the no-context-preamble rule, one level deeper: that one
-  says don't restate what the *conversation* holds, this one says don't
-  restate what the *filesystem* holds.
-- **Never hard-wrap a paragraph.** Every sentence in a paragraph goes on one
-  unbroken line, however long — line breaks appear only between paragraphs,
-  between setup/context and the first task, and between tasks. A hard-wrapped
-  paragraph (a manual line break every ~70-80 characters, the way this guide's
-  own prose is formatted for readability) carries a **real newline** into
-  whatever the user pastes it into. A paste box only reflows text that has no
-  newlines in it — hard-wrapped text keeps breaking at the same spot no
-  matter how wide the box is, so the delivered prompt visibly wastes half the
-  box. This rule applies ONLY to the prompt body inside the fenced block; this
-  routing guide and SKILL.md may keep their own hard-wrapped prose, since
-  neither is ever pasted anywhere.
+Lower effort is the main control on cost and latency, and current models hold
+quality well at `low` and `medium` — sweep downward rather than defaulting
+high out of caution. Effort steers thinking depth, **not** visible response
+length; prompt for brevity separately if the output runs long.
+
+**Model** defaults to `claude-opus-5`:
+
+| Model | Route here when |
+|---|---|
+| `claude-opus-5` | The default. Complex agentic coding, multi-file features, refactors, review, long-horizon work. |
+| `claude-sonnet-5` | Coding and agentic work where cost or volume matters more than the last increment of capability. |
+| `claude-haiku-4-5` | Simple, mechanical, speed-critical steps. |
+| `claude-fable-5` | The hardest, longest, most genuinely ambiguous jobs only — premium pricing, and its safety classifiers decline cybersecurity and life-sciences work. |
+
+**Binding versus advisory.** A task dispatched to a subagent takes its own
+model and effort, so the tag is executable there. A task the session runs
+directly inherits the session's model — one message runs on one model — so the
+tag is advisory and tells the user which session to paste this round into.
+That asymmetry is why a model change and a round boundary are the same event:
+splitting the prompt is the only way a per-task model choice takes effect for
+direct work.
+
+## Rules for the prompt body
+
+These are mechanics. The rules themselves — point-don't-paste, never
+hard-wrap, say-why-once, structure-beats-emphasis, bound-the-work — live in
+SKILL.md under *Writing the prompt body*; don't restate them here.
+
+- Put hard constraints in a `<constraints>` block near the top rather than
+  bolding them inline. Where format or tone is the deliverable, add one
+  `<example>` of the wanted output — it steers harder than describing it.
 - Written to be pasted back into the **same conversation** by default, so it
   assumes the window already holds the project facts — no context preamble.
   Only for an explicit fresh-session paste does it carry the context a new
@@ -333,6 +367,34 @@ Rules for the prompt body:
   not polished.
 - Keep it as short as completeness allows. Polish = density, not length.
 
+## Rounds — cutting a long prompt where it goes stale
+
+At five tasks or more, deliver **round one only**. The cut goes at the first
+point where a finding would change what comes after it: the end of a
+diagnosis, an audit, a spike, a design decision. Everything before that cut is
+writable now; everything after it is a guess dressed as a plan.
+
+Round one's block ends with two lines:
+
+```
+Report back with: <the specific results that decide the next round>.
+Then re-run /rebuild-prompt with those results to get round two.
+```
+
+Follow the block with the remaining rounds as **one line each** — task name
+plus the capability you expect to route to — so the user can see the whole
+arc without receiving stale instructions for it. Mark that outline as
+provisional, because re-planning against real results is the point of cutting
+here at all.
+
+Two other reasons to open a round boundary, even under five tasks:
+
+- **A model change.** Direct-session work can only switch models between
+  messages, so a task tagged for a different model needs its own round.
+- **An approval the user must give.** A destructive, outward-facing, or
+  irreversible step belongs at the start of a round, not buried mid-prompt
+  where the session reaches it unattended.
+
 ## Reminders
 
 - Deliver the **finished, template-formatted** prompt in the first response —
@@ -340,8 +402,14 @@ Rules for the prompt body:
 - Ask before delivering only for a fork that is both genuinely binary AND
   changes which capability gets attached (max 1–2 such questions). Everything
   else defaults + gets an inline `[?]` in the delivered prompt.
+- A single task with an uncontested capability skips the ballot entirely.
+  Asking a question with one real answer is the same friction the skill was
+  built to remove, pointed the other way.
 - Never build a single-option AskUserQuestion. No natural choice set → plain
   text, or offer known context (recent projects, prior memories) as real
   multiple-choice options.
-- `/interview-me` only when the user opts in, after delivery.
+- Offer `grilling` after delivery when the *premise* deserves stress-testing —
+  whether the thing is worth building at all, whether the approach holds.
+  Offer `/interview-me` instead when the premise is settled and the gap is
+  missing requirements. Both only on opt-in, always after the prompt lands.
 - After delivering the final prompt: stop. The user runs it themselves.
