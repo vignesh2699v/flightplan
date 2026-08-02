@@ -55,24 +55,23 @@ asked.
 For every **no-candidate** task: skip the capability line entirely and say
 nothing matched.
 
-Read `~/.claude/rebuild-prompt/history.md` before ranking a contested task —
-see `routing-guide.md` for the read/write mechanics and schema.
+Before ranking, read `~/.claude/rebuild-prompt/history.md` once — covering
+every contested task this run, not a separate read per task. See
+`routing-guide.md` for the read/write mechanics and schema.
+
+Classification and the ballot's candidate list come from the same ranking
+pass — narrow, then rank, once per task (see `routing-guide.md` § Building
+the shortlist). Don't run a shallow pass to classify, then redo the full pass
+to populate the ballot.
 
 Done when every task has a capability, chosen, waived, or absent.
 
 ### 3. Deliver
 
 Write the prompt using the template in `routing-guide.md`. One fenced block
-per segment. A boundary opens at any of: a model or effort change on
-directly-run work, a finding that would change what follows, or an
-irreversible step needing approval.
-
-- **Model/effort boundary** closes by naming the exact model and effort to
-  switch to; the next block is already written.
-- **Finding boundary** closes by asking for results and telling the user to
-  re-run `/rebuild-prompt`; the next block is deliberately not pre-written.
-- Subagent tasks never force a boundary. A one-rung effort change inside the
-  same model stays in the current block.
+per segment — cut at every boundary. See `routing-guide.md` § Segments for
+the three boundary types, their exact closing lines, and the two exemptions;
+don't re-derive it here.
 
 Lead every delivery with a model plan (format in `routing-guide.md`).
 
@@ -97,10 +96,9 @@ Done when every line passes: **would the task go wrong without this?**
 - Hard constraints go in a `<constraints>` tag. Add one `<example>` where
   format or tone is the deliverable. State the behaviour wanted, not the
   behaviour forbidden.
-- Every agent-dispatched task: report at checkpoints, name the artifact,
-  state "verified" with nothing attached is a failed task, surface findings
-  verbatim. Mark independent tasks parallelizable, except where they share
-  files or a canvas.
+- Every agent-dispatched task carries the reporting contract from
+  `routing-guide.md` § Standing rule: agent tasks report as they go — don't
+  restate it here, apply it.
 - Include the scope/delegation/reversibility guard in every prompt (exact
   wording in `routing-guide.md`).
 - Route against the live session listing, exact registered names. Flag
@@ -116,8 +114,8 @@ skill and flag the substitution in the output — never silently drop a step.
 What the prompt *routes to* thins out as capabilities are missing; what the
 *pipeline does* never stops.
 
-- Code-writing tasks get one fresh-context review appended — `/code-review`,
-  a Code Reviewer subagent, or a prose fallback. No self-checking language
-  ("double-check", "re-verify", "include a verification step") in the task
-  body itself.
+- Code-writing tasks get one fresh-context review appended — fallback chain
+  in `routing-guide.md` § Standing rule: implementation tasks get one
+  fresh-context review. No self-checking language ("double-check",
+  "re-verify", "include a verification step") in the task body itself.
 - Plan/spec tasks render as a commentable HTML artifact, not a bare `.md`.

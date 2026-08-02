@@ -53,9 +53,10 @@ Created on first write if absent.
 | 2026-07-23 | design refinement, canvas tool | /impeccable | /high-end-visual-design, /transitions-dev |
 ```
 
-**Read before ranking a contested task.** A matching past pick: "you chose
-this for a similar task on `<date>`", ranked up one position. Still show the
-full shortlist. Still ask. Loses to the stack filter.
+**Read once per run**, before ranking any contested tasks — not a separate
+read per task. A matching past pick: "you chose this for a similar task on
+`<date>`", ranked up one position. Still show the full shortlist. Still ask.
+Loses to the stack filter.
 
 **Write only after the user picks.** Task *shape* only, never prompt
 content — no client names, no URLs, no credentials.
@@ -171,13 +172,23 @@ Then re-run /rebuild-prompt with those results to get the next one.
 | Task | Capability | Why |
 |---|---|---|
 | 1 | `/<skill-a>` | <one line> |
+| 2 | <Agent Name> | <one line> |
+| 3 | `/superpowers:writing-plans` | <one line> |
 
 **Flags:** <auth / setup preconditions / gaps / fallback substitutions — omit if none>
 ```
 
-**Single-task shortcut.** Uncontested task: one header line instead of the
-full "why these skills" table — the pick and its reason, and the nearest
-runner-up and why it lost.
+One row per task — never fewer rows than tasks. A table with a task missing
+demonstrates the exact anti-pattern the "never collapse the mapping" rule
+below warns against.
+
+**Uncontested-task shortcut.** This applies per task, at any job size — a
+3-task job can have one uncontested task and two contested ones in the same
+delivery. A contested task gets a row in the "why these skills" table, with
+its runner-up and why it lost. An uncontested task gets no row — its pick and
+nearest runner-up are stated inline in the task's own body instead, the way
+the single-task shortcut states them at the top level when the whole job is
+one task.
 
 **Never collapse the mapping.** A multi-task prompt with a single skill list
 at the top loses the routing.
@@ -190,13 +201,16 @@ Tag each task `[model: <id> | effort: <level>]`.
 the default for coding/agentic work; `low`/`medium` are the primary lever on
 cost and latency; `max` only when correctness matters more than cost.
 
-**Model** — *as of 2026-08-02, verify against the live model catalog before
-trusting these IDs; model generations turn over faster than this file does.*
-Current snapshot: `claude-opus-5` default; `claude-sonnet-5` for
-cost-sensitive or high-volume work; `claude-haiku-4-5` for mechanical work;
-`claude-fable-5` only for the hardest, longest, most ambiguous jobs. If in
-doubt, ask the user which models they actually have access to rather than
-trusting an old ID here.
+**Model** — same discipline as skills, subagents, and MCP tools above: a
+model name is a capability that changes over time, and this file has no way
+to check it live. Default action: ask the user which models they actually
+have access to in this session. Fall back to the dated snapshot below only
+when asking isn't practical (e.g. mid-delivery, no natural place to pause) —
+*as of 2026-08-02*, it turns over faster than this file gets updated, so
+treat it as a stale reference, not a lookup to perform: `claude-opus-5`
+default; `claude-sonnet-5` for cost-sensitive or high-volume work;
+`claude-haiku-4-5` for mechanical work; `claude-fable-5` only for the
+hardest, longest, most ambiguous jobs.
 
 **Binding vs advisory.** A task dispatched to a subagent takes its own model
 and effort — the tag binds. A directly-run task inherits the session's
@@ -243,11 +257,10 @@ One model/effort throughout: collapse to a line — *"Model plan: one session,
 
 ## Reminders
 
+Mechanics only, per this file's own scope — pipeline-step rules (grilling,
+`/interview-me`) live in SKILL.md, not here.
+
 - Deliver the finished, template-formatted prompt in the first response —
   not a draft, not a question round first.
-- `grilling` runs at step 0, before decomposition. Grill inline when the
-  skill is absent, rather than dropping the step.
-- Offer `/interview-me` after delivery only when it's in the session
-  listing and what remains is missing requirements, not premise.
 - Never build a single-option AskUserQuestion. No natural choice set → plain
   text, or offer known context as real options.
