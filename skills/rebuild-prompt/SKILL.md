@@ -24,6 +24,13 @@ which assumption would be most expensive to have wrong. Skip only for one
 mechanical task with an obvious capability, and say in one line that it was
 skipped and why.
 
+When grilling turns up zero real signal — no target, symptom, or file named
+at all, not even a hint — do not default to a broad speculative search
+across the whole scope as if a real target were known. Narrow the first task
+to diagnosis only, and mark the missing target as the `[?]` gap itself
+rather than picking a plausible-looking one and committing full effort to
+chasing it.
+
 ### 1. Decompose, then classify
 
 Split the raw prompt (plus whatever grilling surfaced) into tasks, ordered by

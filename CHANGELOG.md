@@ -2,6 +2,16 @@
 
 This file mirrors the [GitHub releases](https://github.com/vignesh2699v/claude-rebuild-prompt/releases) for this repo. Every future release is appended here as well as published there.
 
+## v1.12 — the first real measurement, and one bug it found
+
+v1.11's fix 5 spun off a dedicated evaluation harness as separate follow-up work rather than building it in the same release as a documentation refactor. This is that follow-up, landing the same day. Ten releases had shipped on reasoning alone; this is the first one with evidence attached. Full method and results: [`eval/2026-08-02-v1.11-results.md`](eval/2026-08-02-v1.11-results.md), fixtures in [`eval/fixtures.md`](eval/fixtures.md).
+
+**Method:** 10 fixture prompts spanning the shapes the skill handles differently, each run twice (a plain baseline response, and the skill's rebuilt-prompt output), scored by fresh-context judges blind to which output came from which condition.
+
+**Result: skill preferred in 5, baseline in 4, toss-up in 1 — not the clean win ten optimistic changelog entries would suggest.** The skill won decisively wherever real dependency chains, subjective claims needing verification, or high-stakes scope guards were load-bearing (a 5-task onboarding job, a payment-module refactor, a "make it premium" redesign). It lost on small, single-shot, already-obvious asks — but that loss traces to a **known confound in how this comparison was built**, not a discovery that routing or segmentation is broken: the skill's contract is to return a prompt for later execution, never to answer directly, and on a trivial task a prepared prompt is a worse deliverable than an answer, because answering *is* the deliverable there. Raised explicitly and decided: the contract stays as-is. Preparing prompts for other sessions is the product, not an accident, and losing this specific comparison on trivial asks is an accepted tradeoff.
+
+**One finding survived the confound and is a real bug.** Given "help me fix the bug" with zero information, baseline asked what the bug was. The skill's inline-grilling fallback instead authorized an xhigh-effort speculative search across logs/tests/recent diffs for "the most likely candidate," committing full effort to a guessed target — the exact behavior grilling exists to prevent. Fixed: when grilling turns up zero real signal, the skill now narrows to diagnosis-only and marks the missing target as the `[?]` gap, instead of picking a plausible one and chasing it.
+
 ## v1.11 — an outside review, taken seriously
 
 An external reviewer read the whole repo and returned five substantive findings. All five were evaluated on their merits, not applied uniformly — one was extended rather than adopted as stated, and one was scoped as a separate follow-up rather than built in this release.
