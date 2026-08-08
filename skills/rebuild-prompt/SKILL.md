@@ -1,12 +1,13 @@
 ---
 name: rebuild-prompt
-description: Rebuild a rough prompt into a polished, ready-to-paste one, with the best-fit installed skills, subagents and MCP tools routed to each task, plus a model and effort level per task. Use when the user runs /rebuild-prompt, or asks to rebuild, polish, or add the right skills or agents to a prompt they have written. Returns the prompt for the user to run themselves; never executes it.
+description: Rebuild a rough prompt into a polished, ready-to-paste one, with the best-fit installed skills, subagents and MCP tools routed to each task, plus a model and effort level per task. Use when the user runs /rebuild-prompt, or asks to rebuild, polish, or add the right skills or agents to a prompt they have written. Returns the prompt for the user to paste back into this same conversation and run themselves; never executes it.
 ---
 
 # Rebuild Prompt
 
 Turn a rough prompt into a polished one with the right `/skill` invocations
-embedded per task. Deliver the finished prompt, then stop — the user runs it.
+embedded per task. Deliver the finished prompt, then stop — the user pastes
+it back into this same conversation and runs it.
 
 Rationale for every rule below lives in README.md § Design notes. Mechanics,
 exact strings, and templates live in `reference/routing-guide.md`. Do not
@@ -130,9 +131,12 @@ Done when every line passes: **would the task go wrong without this?**
 - One paragraph, one unbroken line. Never hard-wrap the prompt body.
 - Tag every task `[model: <id> | effort: <level>]` — current guidance and
   its verify-before-use note are in `routing-guide.md`.
-- Hard constraints go in a `<constraints>` tag. Add one `<example>` where
-  format or tone is the deliverable. State the behaviour wanted, not the
-  behaviour forbidden.
+- A hard constraint, destructive-action guard, or credential boundary is
+  never dropped for tier — only its ceremony is. Full tier: a `<constraints>`
+  tag. Compact and Single-shot: one line, folded into the body — exact slot
+  in `routing-guide.md` § Output tiers. Add one `<example>` where format or
+  tone is the deliverable. State the behaviour wanted, not the behaviour
+  forbidden.
 - Every agent-dispatched task carries the reporting contract from
   `routing-guide.md` § Standing rule: agent tasks report as they go — don't
   restate it here, apply it.
@@ -157,3 +161,6 @@ notes.)
   fresh-context review. No self-checking language ("double-check",
   "re-verify", "include a verification step") in the task body itself.
 - Plan/spec tasks render as a commentable HTML artifact, not a bare `.md`.
+- A segment that isn't a job's last one closes with a compaction-checkpoint
+  line — fallback chain in `routing-guide.md` § Standing rule: a non-final
+  segment closes with a compaction checkpoint.

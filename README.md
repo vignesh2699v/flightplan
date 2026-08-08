@@ -4,8 +4,8 @@ A [Claude Code](https://claude.com/claude-code) skill that turns a rough,
 half-formed prompt into a polished, ready-to-paste prompt — with the right
 skills, agents, models, and effort levels already routed to each task.
 
-It does **not** run the prompt. It hands you one you can paste into a fresh
-session yourself.
+It does **not** run the prompt. It hands you one you paste back into this
+same conversation yourself — why, and the rare exception, in § Design notes.
 
 ## Example
 
@@ -219,8 +219,10 @@ to release, see [CHANGELOG.md](CHANGELOG.md).
   question round.
 - **It never collapses the task→skill mapping.** A multi-task prompt with
   one skill list at the top loses the routing, which is the whole value.
-- **No context preamble by default.** The prompt usually gets pasted back
-  into the same conversation, which already holds the project facts — and
+- **No context preamble by default.** The prompt gets pasted back into this
+  same conversation by default — a fresh session only when the job is
+  genuinely unrelated, or this one is spent — so it already holds the
+  project facts, and
   context copied out of memory files is a *snapshot*, so restating it as
   present-tense fact is a correctness risk, not just verbosity. A context
   line survives only if the task would break or go wrong without it, and
@@ -299,6 +301,13 @@ to release, see [CHANGELOG.md](CHANGELOG.md).
   it can see what comes next, so it does it. Physical separation into
   one-block-per-segment is the version that holds, and it costs you a paste
   per segment.
+- **A boundary is also where carried state is most exposed.** Everything a
+  later segment depends on — the model plan, the picks already made — lives
+  in this session's own text, not in any file. A generic auto-compact has no
+  way to know that text matters more than the rest of the transcript, so a
+  boundary is exactly where an uncontrolled compaction is most likely to
+  drop it. Naming what to keep, at the moment it's most at risk, is cheaper
+  than losing it.
 - **Not every task needs a skill.** Forcing one onto straightforward work
   in a well-patterned codebase makes the output worse. "None needed" is
   always an option.

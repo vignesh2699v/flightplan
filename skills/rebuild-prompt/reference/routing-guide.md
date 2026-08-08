@@ -118,16 +118,37 @@ Triggers: Plan Mode, `/superpowers:writing-plans`, `/interview-me`, or any
 - A Revise action collects comments and redeploys to the same URL, treated
   as revisions to the plan.
 
+## Standing rule: a non-final segment closes with a compaction checkpoint
+
+Trigger: any Model or Finding boundary (§ Segments) that isn't the job's
+last segment — more of the job runs in this same session after it.
+
+`/ecc:strategic-compact` if installed → plain `/compact` fallback. One line,
+after `Done = ...` and before the boundary's own closing lines:
+
+```markdown
+Run /ecc:strategic-compact before continuing (or /compact if it isn't installed) — this segment is done; keep the model plan and the picks made so far, drop the rest.
+```
+
+Never on a job's last segment — nothing left to carry into a next one.
+
 ## Model and effort annotations
 
 Tag each task `[model: <id> | effort: <level>]`.
 
 **Effort** is a fixed ladder: `low | medium | high | xhigh | max`. `medium`
-is the default for every task. Escalate — one rung at a time, stated in the
-Cost band line — only the task flagged in step 0 as the costliest assumption
-to get wrong, or a task whose own shape demands it (a large diff, a
-security/payment path, a spec still genuinely ambiguous after grilling).
-`max` only when correctness matters more than cost.
+is the default for every task — except a pure clarification (no candidate,
+nothing to route to, the task is only asking a question), which defaults to
+`low`: there's execution risk in acting on a wrong guess, not in asking one.
+Escalate — one rung at a time, stated in the Cost band line — only when the
+*task itself* costs more to get wrong: the one flagged in step 0 as the
+costliest assumption, or a task whose own shape demands it (a large diff, a
+security/payment path, deep multi-file reasoning). An unresolved premise
+isn't on that list — a clarifying-question or diagnosis-only-narrowing task
+stays at its default regardless of how ambiguous the thing it's asking about
+is; escalating it re-introduces the speculative guessing step 0's
+zero-signal rule already forbids. `max` only when correctness matters more
+than cost.
 
 **Model** — same discipline as skills, subagents, and MCP tools above: a
 model name is a capability that changes over time, and this file has no way
@@ -233,7 +254,7 @@ One task, nothing to segment. No review header, no table:
 
 ```markdown
 ​```
-Use /<skill-or-agent>, `<model>` at `<effort>`. <One-sentence instruction, folding in the requirement and why it matters.> Done = <criterion>.
+Use /<skill-or-agent>, `<model>` at `<effort>`. <One-sentence instruction, folding in the requirement and why it matters.> <One-sentence hard constraint — destructive-action guard, credential boundary, or scope limit (e.g. read-only, test-data-only) — only when a real one applies; omit entirely otherwise, don't invent one to fill the slot.> Done = <criterion>.
 <Closing checklist line — § Closing checklist, single-criterion form.>
 ​```
 **Why:** <the pick, and its nearest runner-up if the task was contested. Omit the runner-up clause if uncontested.>
@@ -252,6 +273,8 @@ header states, no "why these skills" table:
 <self-invocation line, if any task names a skill>
 
 <one-sentence intent>
+
+<One-line hard constraint — destructive-action guard, credential boundary, or scope limit — only when a real one applies to a task below; omit entirely otherwise, don't invent one to fill the slot.>
 
 Task 1 — <what to do, one unbroken line>.
 Task 2 — <what to do, one unbroken line>. (only if a second or third task exists)
@@ -305,11 +328,13 @@ Done = <success criteria>.
 
 <Model/effort boundary closes INSIDE the block, next segment delivered as its own separate block:>
 ​```
+<Compaction-checkpoint line — § Standing rule: a non-final segment closes with a compaction checkpoint.>
 Stop here. Switch this session to <model> at <effort> before continuing, then paste the next block.
 ​```
 
-<Finding boundary closes with these two lines instead — the next block is NOT pre-written:>
+<Finding boundary closes with these three lines instead — the next block is NOT pre-written:>
 ​```
+<Compaction-checkpoint line — § Standing rule: a non-final segment closes with a compaction checkpoint.>
 Report back with: <the results that decide the next segment>.
 Then re-run /rebuild-prompt with those results to get the next one.
 ​```
