@@ -164,9 +164,10 @@ documented fallback otherwise — see Requirements below.
 - Routes against whatever skills, agents, and MCP tools you already have.
   It never invents a capability name — with nothing installed, it still
   produces a well-structured prompt, just with fewer skills attached.
-- **No other skill is a hard dependency**, including `grilling` — a
-  personal, unpublished skill (there's no public source to link; if you
-  don't have it, the pipeline grills inline instead, no install needed).
+- **No other skill is a hard dependency**, including `grilling` — that one
+  comes from [mattpocock/skills](https://github.com/mattpocock/skills)
+  (`npx -y skills add mattpocock/skills --skill grilling --agent claude-code`),
+  but you don't need it: without it the pipeline grills inline instead.
   What the prompt *routes to* thins out as you install less, down to a
   prompt with no `/skill` lines at all — structure, model and effort tags,
   constraints and success criteria still intact. What the pipeline *does*
