@@ -31,7 +31,18 @@ to diagnosis only, and mark the missing target as the `[?]` gap itself
 rather than picking a plausible-looking one and committing full effort to
 chasing it.
 
+Carry the answer to the last question forward to step 3 — it's what decides
+which task, if any, escalates past the default effort level.
+
 ### 1. Decompose, then classify
+
+If the raw prompt continues a job this pipeline already ran earlier in the
+same session — same topic, or explicitly the results of a prior segment —
+carry forward every ballot pick, the model plan, and any settled constraints,
+and print one line naming what carried. Decompose only the tasks that are
+new or still open. A genuinely new topic carries nothing; say so and
+classify fresh. Don't reset a running job on every turn, and don't reuse a
+stale pick without naming it either.
 
 Split the raw prompt (plus whatever grilling surfaced) into tasks, ordered by
 dependency. Look up context from memory and project files rather than
@@ -46,6 +57,19 @@ For every task, classify it:
 | No candidate | Nothing in skills, subagents, or MCP tools fits |
 
 This per-task classification drives step 2 — task *count* does not.
+
+Then classify the **job** itself, once, from the resulting task list:
+
+| Job size | Signal | Output tier |
+|---|---|---|
+| Single-shot | 1 task | One-line |
+| Compact | 2–3 tasks, one segment | Short |
+| Full | Any segment boundary, or 4+ tasks | Full |
+
+Job size is independent of the per-task table above — a single-shot job can
+still be contested; it only controls how much gets written around the
+answer, not whether step 2 asks about it. Tier templates: `routing-guide.md`
+§ Output tiers.
 
 ### 2. Ballot
 
@@ -75,16 +99,22 @@ Done when every task has a capability, chosen, waived, or absent.
 
 ### 3. Deliver
 
-Write the prompt using the template in `routing-guide.md`. One fenced block
-per segment — cut at every boundary. See `routing-guide.md` § Segments for
-the three boundary types, their exact closing lines, and the two exemptions;
-don't re-derive it here.
+Write at the tier step 1 selected — Single-shot, Compact, or Full, exact
+templates in `routing-guide.md` § Output tiers. Full tier cuts one fenced
+block per segment at every boundary; see `routing-guide.md` § Segments for
+the three boundary types, their exact closing lines, and the two exemptions.
 
-Lead every delivery with a model plan (format in `routing-guide.md`).
+Compact and Full lead with the review header (`routing-guide.md` § Review
+header) — five lines, scannable before the fenced block, never inside it.
+Single-shot skips it — see `routing-guide.md` § Review header for why.
 
 Mark ambiguity `[?]` inline rather than asking about it. Offer
 `/interview-me` afterward, only when it's in the session listing and what
 remains is missing requirements rather than a questionable premise.
+
+Close every delivery, every tier, with the line from `routing-guide.md` §
+Closing checklist — the user's next message becomes pass/fail per criterion,
+not a fresh paragraph to re-parse.
 
 Done when every line passes: **would the task go wrong without this?**
 
@@ -112,14 +142,15 @@ Done when every line passes: **would the task go wrong without this?**
   auth, disconnection, or setup preconditions.
 - Keep the user's voice — polish structure, don't add requirements they
   never implied.
-- Success criteria are mandatory.
+- Success criteria are mandatory, phrased so the closing checklist
+  (`routing-guide.md`) can be reported against pass/fail — not prose.
 
 ## Standing rules
 
 Applied every run, never asked about. Use the fallback for any missing
-skill and flag the substitution in the output — never silently drop a step.
-What the prompt *routes to* thins out as capabilities are missing; what the
-*pipeline does* never stops.
+capability — skill, subagent or MCP tool — and flag the substitution in the
+output. Never silently drop a pipeline step. (Rationale: README.md § Design
+notes.)
 
 - Code-writing tasks get one fresh-context review appended — fallback chain
   in `routing-guide.md` § Standing rule: implementation tasks get one

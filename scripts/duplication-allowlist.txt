@@ -1,0 +1,8 @@
+# Phrases the duplication lint should ignore, one per line.
+# Each entry needs a reason. Matching is on normalized words (lowercased,
+# markdown stripped), substring against the flagged passage.
+
+# README § Design notes quotes the funnel output string verbatim as an
+# illustration; routing-guide.md owns the exact string. Quoting it is the
+# point — a paraphrase would misdocument the output format.
+the funnel 14 matched these 3 ranked highest

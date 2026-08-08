@@ -2,6 +2,51 @@
 
 This file mirrors the [GitHub releases](https://github.com/vignesh2699v/claude-rebuild-prompt/releases) for this repo. Every future release is appended here as well as published there.
 
+## v1.13 — output size tracks job size, cost defaults down, jobs don't reset
+
+Direct feedback, not a review pass: too much of the delivered output went
+unread — a big prompt only gets a glance before pasting — effort defaulted
+to the top of the ladder regardless of what a task was actually worth, and
+it was unclear whether a follow-up message inside the same job should
+re-litigate everything already decided.
+
+**Three output tiers, selected by job size, not written by hand each time.**
+A one-task fix now returns one fenced line — no model-plan table, no "why
+these skills" grid (**Single-shot**). A 2–3 task job gets a five-line
+scannable header (Intent / Capabilities / Model plan / Cost band / Flags)
+and one short block (**Compact**). Only a job with a real segment boundary,
+or four-plus tasks, gets the full segmented treatment that shipped before
+(**Full**). Templates for all three: `routing-guide.md` § Output tiers.
+
+**Effort now defaults to `medium`, escalating only where step 0 says the
+stakes justify it.** Grilling already asks which assumption is costliest to
+get wrong — that answer was being asked and then discarded. It now drives
+the one dial that decides both cost and latency, stated in the header's cost
+band rather than applied silently.
+
+**A job in progress carries its decisions instead of resetting.** A
+follow-up message inside the same session that's plainly a continuation —
+same topic, or the results of a prior segment — now carries forward every
+ballot pick, the model plan, and settled constraints, decomposing only what's
+new, and prints one line naming what carried. A genuinely new topic still
+gets a fresh classification. This was the direct answer to "should it reset
+every turn": no — full reset would force re-answering ballot questions
+already settled a message ago, which is the exact friction the routing-
+history log exists to reduce.
+
+**Every delivery closes with a checklist, not an open-ended sign-off.** One
+pass/fail line per success criterion, so the user's next message is a
+verdict the skill can act on, not prose to re-read — the direct answer to
+"check with me if I received what I wanted."
+
+**Caught by the duplication lint before anything shipped:** the new
+templates initially repeated the closing-checklist line verbatim four times,
+and restructuring the output-template section into three subsections dropped
+the zero-width-space escaping that keeps nested example fences from closing
+the outer one early — a rendering bug, not just a lint finding. Both fixed
+in this release; `scripts/lint-duplication.py` (added this session) is now
+part of the pre-release check.
+
 ## v1.12 — the first real measurement, and one bug it found
 
 v1.11's fix 5 spun off a dedicated evaluation harness as separate follow-up work rather than building it in the same release as a documentation refactor. This is that follow-up, landing the same day. Ten releases had shipped on reasoning alone; this is the first one with evidence attached. Full method and results: [`eval/2026-08-02-v1.11-results.md`](eval/2026-08-02-v1.11-results.md), fixtures in [`eval/fixtures.md`](eval/fixtures.md).

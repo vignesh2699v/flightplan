@@ -47,6 +47,22 @@ Then re-run /rebuild-prompt with those results to get the next segment.
 ...plus a table showing which capabilities were considered and why each was
 picked or passed over.
 
+That's the **Full** tier — this job has a finding boundary between the audit
+and the redesign, so it earns the full treatment. A smaller ask doesn't:
+
+**In:** `fix the off-by-one in the pagination loop, file's in the ticket`
+
+**Out:**
+
+```
+Use /debugging, `claude-sonnet-5` at `medium`. Fix the off-by-one in the pagination loop referenced in the ticket, and confirm the last page no longer drops or repeats a row. Done = paginated list matches the total row count exactly, first and last page verified manually.
+When you've run this, tell me pass or fail — I'll flag any gap and fix the prompt if one exists.
+```
+**Why:** `/debugging` — no real runner-up for a one-file logic fix.
+
+One task, one line, no table, no model-plan header — the **Single-shot**
+tier. Job size drives output size; see § Design notes.
+
 ## The problem
 
 You have dozens of skills installed. You type "make my dashboard less
@@ -152,6 +168,18 @@ this prompt", or "add the right skills to this".
 - **It remembers what you picked.** Past choices are recorded per task shape
   and surface in later shortlists as a ranking signal — never as a decision
   made on your behalf.
+- **Output size tracks job size.** A one-task fix returns one fenced line —
+  no model-plan table, no "why these skills" grid. A 2–3 task job gets a
+  five-line scannable header and one short block. Only a job with a real
+  segment boundary, or four-plus tasks, gets the full treatment.
+- **Effort defaults to `medium`, not the top of the ladder.** It escalates
+  only where step 0's own findings say the stakes justify it — stated in
+  the header's cost band, not silently applied.
+- **A running job continues instead of resetting.** Ask again mid-job and it
+  carries the picks, model plan, and constraints already settled, decomposing
+  only what's new — and says on-screen exactly what it carried forward.
+- **Every delivery closes with a checklist, not a paragraph.** One line per
+  success criterion, meant to be answered pass/fail after you've run it.
 
 Both standing rules name specific skills (`/code-review` and a
 commentable-preview skill). Each is applied **only if installed**, with a
@@ -262,10 +290,10 @@ to release, see [CHANGELOG.md](CHANGELOG.md).
   rather than guessed ahead of it.
 - **Model choice and segment boundaries are the same decision.** A per-task
   model tag is only enforceable where a boundary exists to keep its promise.
-  Subagents take their own model and effort, so the tag binds there; a
-  directly-run task inherits the session's model, and one message runs on
-  one model. That makes "route this to Sonnet" and "cut the prompt here" the
-  same instruction.
+  Subagents take their own model and effort, so the tag binds there; work
+  you run directly executes on whatever model the session already has, and
+  one message runs on one model. That makes "route this to Sonnet" and "cut
+  the prompt here" the same instruction.
 - **Stop markers inside a block don't stop anything.** A session handed the
   whole instruction set has no reason to honour a line telling it to wait —
   it can see what comes next, so it does it. Physical separation into
@@ -274,6 +302,47 @@ to release, see [CHANGELOG.md](CHANGELOG.md).
 - **Not every task needs a skill.** Forcing one onto straightforward work
   in a well-patterned codebase makes the output worse. "None needed" is
   always an option.
+- **A prompt built to be read isn't built to be pasted.** The delivered text
+  is written for the model that will execute it, not for a human editorial
+  pass — but the eval's own confound and direct feedback agreed on the same
+  fix from two directions: a big job is genuinely hard to glance at before
+  pasting. Output size now tracks job size instead of defaulting to the full
+  template regardless of how small the ask was.
+- **The default effort should track what's actually at stake.** Every task
+  defaulting to the top of the ladder prices a typo fix the same as a
+  payment-path rewrite. Grilling already asks which assumption is costliest
+  to get wrong — that answer was being thrown away instead of driving the
+  one dial that controls both cost and latency.
+- **A job in progress is state, not a fresh question.** Resetting on every
+  turn would force re-answering ballot questions already settled a message
+  ago — the friction the routing-history log exists to reduce. Carrying
+  forward what's decided and re-deriving only the task list keeps a session
+  from drifting without re-litigating picks that didn't change.
+- **A closing line only works if it asks for a verdict.** "Let me know how
+  it goes" gets prose back that has to be re-read in full. A pass/fail line
+  per criterion gets a verdict back — which is also the only way to know
+  whether the delivered prompt produced what was actually asked for.
+
+## Development
+
+Three files describe one system — SKILL.md holds the imperative steps,
+`reference/routing-guide.md` holds the mechanics and exact strings, README.md
+holds the rationale. A rule written into two of them drifts, and this one has
+drifted three times: the v1.7 audit caught it, then v1.11's review caught it
+twice more, the second time inside the commit that claimed to have fixed it.
+
+Discipline didn't hold, so a check does:
+
+```bash
+python3 scripts/lint-duplication.py
+```
+
+It fails on any run of 8 consecutive words appearing in two places. Code
+blocks are exempt (the worked example above is meant to mirror the template),
+and so is any line that names another file or a `§` section — pointing at a
+rule is the pattern that fixes this, not the bug. Genuine repeats go in
+`scripts/duplication-allowlist.txt` with a reason. Run it before every
+release; `--shingle N` tightens or loosens the window, `--json` for tooling.
 
 ## License
 

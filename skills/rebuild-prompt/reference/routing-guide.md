@@ -41,9 +41,9 @@ below — wrong layer, too general, overlapping, unavailable.
 
 ## Routing history
 
-**Location:** `~/.claude/rebuild-prompt/history.md` — outside any skill's
-install directory, so a `cp -r` update or reinstall never touches it.
-Created on first write if absent.
+**Location:** `~/.claude/rebuild-prompt/history.md`, created on first write
+if absent. Deliberately outside the install tree — see README.md § Design
+notes for why.
 
 **Format** — one row per task, appended:
 
@@ -118,7 +118,153 @@ Triggers: Plan Mode, `/superpowers:writing-plans`, `/interview-me`, or any
 - A Revise action collects comments and redeploys to the same URL, treated
   as revisions to the plan.
 
-## Output template
+## Model and effort annotations
+
+Tag each task `[model: <id> | effort: <level>]`.
+
+**Effort** is a fixed ladder: `low | medium | high | xhigh | max`. `medium`
+is the default for every task. Escalate — one rung at a time, stated in the
+Cost band line — only the task flagged in step 0 as the costliest assumption
+to get wrong, or a task whose own shape demands it (a large diff, a
+security/payment path, a spec still genuinely ambiguous after grilling).
+`max` only when correctness matters more than cost.
+
+**Model** — same discipline as skills, subagents, and MCP tools above: a
+model name is a capability that changes over time, and this file has no way
+to check it live. Default action: ask the user which models they actually
+have access to in this session. Fall back to the dated snapshot below only
+when asking isn't practical (e.g. mid-delivery, no natural place to pause) —
+*as of 2026-08-02*, it turns over faster than this file gets updated, so
+treat it as a stale reference, not a lookup to perform: `claude-opus-5`
+default; `claude-sonnet-5` for cost-sensitive or high-volume work;
+`claude-haiku-4-5` for mechanical work; `claude-fable-5` only for the
+hardest, longest, most ambiguous jobs.
+
+**Binding vs advisory.** A task dispatched to a subagent takes its own model
+and effort — the tag binds. A directly-run task inherits the session's
+model — the tag is advisory, telling the user which session to paste the
+segment into. This is why a model change and a segment boundary are the
+same event: a directly-run task's tag only takes effect if the prompt stops
+where it changes.
+
+## Segments
+
+Apply to Full tier only — Single-shot and Compact never span more than one
+block, by definition of the job sizes that select them.
+
+Three things open a boundary: a model/effort change on directly-run work, a
+finding that would rewrite what follows, or an irreversible step needing
+approval. Task count alone opens nothing.
+
+- **Model boundary** — closes naming the exact model and effort; next block
+  already written. Name the model in full (`claude-sonnet-5`, not
+  "Sonnet"). Exemptions: subagent tasks never force a stop; a one-rung
+  effort change inside the same model stays in the block.
+- **Finding boundary** — closes asking for results, sending the user back
+  to `/rebuild-prompt`; next block deliberately not pre-written.
+- **Approval boundary** — a destructive/outward-facing/irreversible step
+  starts its own segment rather than sitting mid-block.
+
+Separate blocks, never markers inside one block.
+
+After the last delivered block: remaining segments, one line each — task
+name, capability, model — marked provisional.
+
+## Model plan
+
+Leads every Compact or Full delivery, above the review header (§ Review
+header folds it in as one line; this is the expanded form for Full tier
+when more than one model is in play):
+
+```markdown
+**Model plan** — 2 sessions.
+
+| Segment | Model | Effort |
+|---|---|---|
+| 1 — audit the current schema | `claude-sonnet-5` | `medium` |
+| 2 — implement the migration | `claude-opus-5` | `xhigh` |
+```
+
+One model/effort throughout: collapse to a line — *"Model plan: one session,
+`claude-opus-5` at `xhigh` throughout — no switching."*
+
+## Review header
+
+Leads every Compact and Full delivery, above the first fenced block —
+Single-shot skips it, the whole output is already this short. Five lines,
+meant to be the only part actually read before pasting:
+
+```markdown
+**Intent** — <what this delivers, one line>
+**Capabilities** — <task: capability, task: capability, ...>
+**Model plan** — <one line when a single model throughout, else the table above>
+**Cost band** — <cheap / moderate / expensive — one clause why>
+**Flags** — <auth, setup preconditions, gaps, substitutions — omit the line if none>
+```
+
+Cost band is a rough read, not a token count: `cheap` = medium effort
+throughout, one model, no subagents; `moderate` = one escalated task, or a
+subagent dispatch; `expensive` = xhigh/max effort, several subagents, or a
+job spanning multiple sessions. State the one clause that decided it.
+
+## Closing checklist
+
+The last line of every delivery, every tier — turns the next message back
+into a report against what was asked for, not a fresh paragraph:
+
+```markdown
+When you've run this, tell me pass/fail on: <criterion 1> — <criterion 2> — <criterion 3, if any>. I'll flag any gap and fix the prompt if one exists.
+```
+
+One clause per success criterion already stated in the task — never
+introduce a new one here. A single-criterion job's "Done = " line already
+says it; shorten to "tell me pass or fail — I'll flag any gap" with no list.
+
+## Output tiers
+
+Selected by the job-size table in SKILL.md § 1. Never write a bigger tier
+than the job earned — a two-line fix wrapped in a model-plan table and a
+five-row "why these skills" grid is what made this hard to glance at before
+it needs pasting.
+
+### Single-shot
+
+One task, nothing to segment. No review header, no table:
+
+```markdown
+​```
+Use /<skill-or-agent>, `<model>` at `<effort>`. <One-sentence instruction, folding in the requirement and why it matters.> Done = <criterion>.
+<Closing checklist line — § Closing checklist, single-criterion form.>
+​```
+**Why:** <the pick, and its nearest runner-up if the task was contested. Omit the runner-up clause if uncontested.>
+```
+
+### Compact
+
+2–3 tasks, one segment, no boundary. Review header, then one fenced block —
+no per-task model tags unless a task needs a different effort than the
+header states, no "why these skills" table:
+
+```markdown
+<Review header — § Review header>
+
+​```
+<self-invocation line, if any task names a skill>
+
+<one-sentence intent>
+
+Task 1 — <what to do, one unbroken line>.
+Task 2 — <what to do, one unbroken line>. (only if a second or third task exists)
+
+Done = <criteria, one clause per task>.
+<Closing checklist line — § Closing checklist.>
+​```
+```
+
+### Full
+
+Any segment boundary, or 4+ tasks. Header, one fenced block per segment, the
+"why these skills" table, and the model plan:
 
 ```markdown
 ## Your rebuilt prompt
@@ -128,7 +274,7 @@ As you reach each task below, invoke the skill named in it via the Skill tool be
 
 <Overall goal in the user's voice, one or two sentences, on ONE line, ending with why it matters and what the output enables.>
 
-<Context block only for a fresh-session paste, or a fact that would break the task if wrong and isn't inferable.>
+<Context block — SKILL.md § Writing the prompt body decides when one belongs.>
 
 <constraints>
 <hard constraints, destructive-action guards, credential boundaries — one per line. Omit the block if there are none.>
@@ -154,6 +300,7 @@ Use /superpowers:writing-plans (or /interview-me, whichever fits).
 When ready, publish as an interactive HTML artifact reusing the commentable-preview mechanism. Treat submitted comments as revision requests.
 
 Done = <success criteria>.
+<Closing checklist line — § Closing checklist.>
 ​```
 
 <Model/effort boundary closes INSIDE the block, next segment delivered as its own separate block:>
@@ -178,89 +325,25 @@ Then re-run /rebuild-prompt with those results to get the next one.
 **Flags:** <auth / setup preconditions / gaps / fallback substitutions — omit if none>
 ```
 
-One row per task — never fewer rows than tasks. A table with a task missing
-demonstrates the exact anti-pattern the "never collapse the mapping" rule
-below warns against.
+One row per task in the "why these skills" table — never fewer rows than
+tasks. A table with a task missing demonstrates the exact anti-pattern the
+"never collapse the mapping" rule below warns against.
 
-**Uncontested-task shortcut.** This applies per task, at any job size — a
-3-task job can have one uncontested task and two contested ones in the same
+**Uncontested-task shortcut.** Applies per task, at any job size — a 3-task
+job can have one uncontested task and two contested ones in the same
 delivery. A contested task gets a row in the "why these skills" table, with
-its runner-up and why it lost. An uncontested task gets no row — its pick and
-nearest runner-up are stated inline in the task's own body instead, the way
-the single-task shortcut states them at the top level when the whole job is
-one task.
+its runner-up and why it lost. An uncontested task gets no row — its pick
+and nearest runner-up are stated inline in the task's own body instead.
 
 **Never collapse the mapping.** A multi-task prompt with a single skill list
 at the top loses the routing.
 
-## Model and effort annotations
-
-Tag each task `[model: <id> | effort: <level>]`.
-
-**Effort** is a fixed ladder: `low | medium | high | xhigh | max`. `xhigh` is
-the default for coding/agentic work; `low`/`medium` are the primary lever on
-cost and latency; `max` only when correctness matters more than cost.
-
-**Model** — same discipline as skills, subagents, and MCP tools above: a
-model name is a capability that changes over time, and this file has no way
-to check it live. Default action: ask the user which models they actually
-have access to in this session. Fall back to the dated snapshot below only
-when asking isn't practical (e.g. mid-delivery, no natural place to pause) —
-*as of 2026-08-02*, it turns over faster than this file gets updated, so
-treat it as a stale reference, not a lookup to perform: `claude-opus-5`
-default; `claude-sonnet-5` for cost-sensitive or high-volume work;
-`claude-haiku-4-5` for mechanical work; `claude-fable-5` only for the
-hardest, longest, most ambiguous jobs.
-
-**Binding vs advisory.** A task dispatched to a subagent takes its own model
-and effort — the tag binds. A directly-run task inherits the session's
-model — the tag is advisory, telling the user which session to paste the
-segment into. This is why a model change and a segment boundary are the
-same event: a directly-run task's tag only takes effect if the prompt stops
-where it changes.
-
-## Segments
-
-Three things open a boundary: a model/effort change on directly-run work, a
-finding that would rewrite what follows, or an irreversible step needing
-approval. Task count alone opens nothing.
-
-- **Model boundary** — closes naming the exact model and effort; next block
-  already written. Name the model in full (`claude-sonnet-5`, not
-  "Sonnet"). Exemptions: subagent tasks never force a stop; a one-rung
-  effort change inside the same model stays in the block.
-- **Finding boundary** — closes asking for results, sending the user back
-  to `/rebuild-prompt`; next block deliberately not pre-written.
-- **Approval boundary** — a destructive/outward-facing/irreversible step
-  starts its own segment rather than sitting mid-block.
-
-Separate blocks, never markers inside one block.
-
-After the last delivered block: remaining segments, one line each — task
-name, capability, model — marked provisional.
-
-## Model plan
-
-Leads every delivery, above the first block:
-
-```markdown
-**Model plan** — 2 sessions.
-
-| Segment | Model | Effort |
-|---|---|---|
-| 1 — audit the current schema | `claude-sonnet-5` | `medium` |
-| 2 — implement the migration | `claude-opus-5` | `xhigh` |
-```
-
-One model/effort throughout: collapse to a line — *"Model plan: one session,
-`claude-opus-5` at `xhigh` throughout — no switching."*
-
 ## Reminders
 
 Mechanics only, per this file's own scope — pipeline-step rules (grilling,
-`/interview-me`) live in SKILL.md, not here.
+`/interview-me`, job-size classification) live in SKILL.md, not here.
 
-- Deliver the finished, template-formatted prompt in the first response —
-  not a draft, not a question round first.
+- Deliver the finished, tier-appropriate prompt in the first response — not
+  a draft, not a question round first.
 - Never build a single-option AskUserQuestion. No natural choice set → plain
   text, or offer known context as real options.
