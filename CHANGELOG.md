@@ -2,6 +2,91 @@
 
 This file mirrors the [GitHub releases](https://github.com/vignesh2699v/claude-rebuild-prompt/releases) for this repo. Every future release is appended here as well as published there.
 
+## v1.16 — the publish trigger is one condition, not two
+
+**The AND the eval asked for turned out to be redundant.** [The v1.15
+results](eval/2026-08-09-v1.15-results.md) recommended publishing when a job
+is Full tier *and* spans more than one segment. `/simplify` showed the first
+conjunct never binds — § Segments already establishes that only Full tier can
+span segments at all. The counterexample written to justify it was wrong too,
+for the same reason.
+
+**So the rule is one condition:** a job spanning more than one segment
+publishes a page; anything delivered in a single block stays in chat. It had
+been asserted in three imperative places plus a README rationale, and is now
+stated once in § Job artifact with the rest pointing at it. Net −1 line while
+fixing the rule.
+
+**Verified by re-running the fixtures** — F6 and F9 moved from publishing to
+chat, the rest held. F9 proves it rather than merely passing: it stayed Full
+tier while delivering to chat, so output size and delivery channel are now
+independent axes. Table and caveats in the [follow-up
+section](eval/2026-08-09-v1.15-results.md).
+
+**This trigger has moved four times**, three of them on reasoning alone and
+each argument convincing when made. It should not move again without a
+fixture run.
+
+## v1.15 — Full-tier jobs get a page holding the plan and the prompt
+
+**The plan and the prompt have different readers and were sharing one
+surface.** v1.13 narrowed that by shrinking the output; it couldn't close it,
+because a big job still has to say enough to execute. Full-tier jobs now
+publish a page instead: the plan on top, written to be read, and the prompt
+below it in a copy block, written to be run. You review the plan and copy the
+prompt without reading it, which is what makes the prompt's length stop
+costing anything. (v1.16 re-keyed which jobs qualify.)
+
+**One page per job, not per delivery.** It redeploys to the same URL each
+time the job moves — segment two lands on the page already open, segment one
+flips to done — and step 1 reads it back when resuming, so a job survives a
+compaction, a new session, or a reboot. The Artifact list becomes the index
+of every job run.
+
+**Four `/simplify` passes, each of which changed the design.** Round 1: the
+page was written but never read, so the durability claim was unearned. Round
+2: the fix for that stored the page URL in `history.md`, which § Routing
+history forbids and has no column for; the same round also narrowed the
+publish trigger to multi-segment. Round 3: the page's identity was never
+pinned, so recovery via the Artifact list action had nothing to match on.
+Round 4 reversed round 2's narrowing.
+
+**Measured against v1.14** on a six-fixture subset: the page won 2 of 3
+judged pairs including the only clear margin, and the tier guardrail held
+cleanly. It lost the one job that resolved to a single segment — which is
+what v1.16 fixed. Details in
+[the v1.15 results](eval/2026-08-09-v1.15-results.md).
+
+## v1.14 — measure v1.13 against v1.12, fix what it found, fix a same-session bug
+
+**Ran the fixture set against v1.13 for the first time**, comparing it to
+v1.12 rather than to a plain baseline. **v1.12 won 6 of 10, v1.13 won 4** —
+the release did not beat the version it replaced. Full writeup in
+[the v1.13 results](eval/2026-08-09-v1.13-results.md).
+
+**Constraints were being dropped by tier.** Compact and Single-shot had no
+slot for a hard constraint, destructive-action guard, or credential boundary
+— only Full tier's `<constraints>` block did — and real losses followed: a
+dropped read-only guard on a state-management review, a dropped
+test-account-only guard on a signup-flow check. Both tiers now carry an
+optional one-line slot. The constraint itself is never dropped for tier, only
+its ceremony.
+
+**Ambiguity of the premise isn't cost of the task.** The effort-escalation
+trigger fired on "spec still ambiguous after grilling," which tagged a plain
+clarifying question at the top of the ladder. It now keys on what the task
+itself costs to get wrong, and a pure clarification defaults to `low`.
+
+**A real contradiction, fixed.** README, the frontmatter description, and
+SKILL.md's intro all said or implied the rebuilt prompt goes into a fresh
+session, while the segment mechanics already said "switch this session." All
+three now agree — paste back into the same conversation by default.
+
+**Non-final segments close with a compaction checkpoint**, routing to
+`ecc:strategic-compact` where installed and plain `/compact` otherwise, and
+naming what to keep — so a generic auto-compact doesn't summarise away state
+the next segment depends on.
+
 ## v1.13 — output size tracks job size, cost defaults down, jobs don't reset
 
 Direct feedback, not a review pass: too much of the delivered output went
