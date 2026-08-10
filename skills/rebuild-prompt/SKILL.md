@@ -37,11 +37,14 @@ which task, if any, escalates past the default effort level.
 
 ### 1. Decompose, then classify
 
-If the raw prompt continues a job this pipeline already ran earlier in the
-same session — same topic, or explicitly the results of a prior segment —
-carry forward every ballot pick, the model plan, and any settled constraints,
-and print one line naming what carried. Decompose only the tasks that are
-new or still open. A genuinely new topic carries nothing; say so and
+If the raw prompt continues a job this pipeline already ran — same topic, or
+explicitly the results of a prior segment — carry forward every ballot pick,
+the model plan, whatever grilling ruled out, and any settled constraints,
+and print one line naming what carried. Read it off the job's page first
+where one exists (`routing-guide.md` § Job artifact); otherwise carry only
+what this session still holds, and say plainly when a job predates it rather
+than printing a carried line nothing backs. Decompose only the tasks that
+are new or still open. A genuinely new topic carries nothing; say so and
 classify fresh. Don't reset a running job on every turn, and don't reuse a
 stale pick without naming it either.
 
@@ -108,6 +111,9 @@ the three boundary types, their exact closing lines, and the two exemptions.
 Compact and Full lead with the review header (`routing-guide.md` § Review
 header) — five lines, scannable before the fenced block, never inside it.
 Single-shot skips it — see `routing-guide.md` § Review header for why.
+
+Full tier delivers through a published page rather than chat
+(`routing-guide.md` § Job artifact).
 
 Mark ambiguity `[?]` inline rather than asking about it. Offer
 `/interview-me` afterward, only when it's in the session listing and what

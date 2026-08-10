@@ -127,7 +127,7 @@ last segment — more of the job runs in this same session after it.
 after `Done = ...` and before the boundary's own closing lines:
 
 ```markdown
-Run /ecc:strategic-compact before continuing (or /compact if it isn't installed) — this segment is done; keep the model plan and the picks made so far, drop the rest.
+Run /ecc:strategic-compact before continuing (or /compact if it isn't installed) — this segment is done, so keep whatever it just produced that the next one needs, and let the rest go; the job's page still holds the plan, the picks and the constraints.
 ```
 
 Never on a job's last segment — nothing left to carry into a next one.
@@ -211,7 +211,8 @@ One model/effort throughout: collapse to a line — *"Model plan: one session,
 
 ## Review header
 
-Leads every Compact and Full delivery, above the first fenced block —
+Leads every Compact and Full delivery — above the first fenced block in
+chat, or as the page header when the job publishes (§ Job artifact).
 Single-shot skips it, the whole output is already this short. Five lines,
 meant to be the only part actually read before pasting:
 
@@ -240,6 +241,75 @@ When you've run this, tell me pass/fail on: <criterion 1> — <criterion 2> — 
 One clause per success criterion already stated in the task — never
 introduce a new one here. A single-criterion job's "Done = " line already
 says it; shorten to "tell me pass or fail — I'll flag any gap" with no list.
+
+## Job artifact
+
+Full tier only: one published page per job, holding the plan to read and the
+prompt to copy, redeployed in place as the job moves. Compact and Single-shot
+deliver in chat — they're already short enough to scan where they land.
+
+Keyed to tier, not to segment count. The page exists first to stop the plan
+and the prompt sharing one surface, and that pressure comes from how much a
+job has to say, which is what tier already measures. A 6-task single-segment
+job is the heaviest thing this skill can deliver and needs the page most;
+gating on segments would route it to chat and publish a 2-task job instead.
+Surviving across sessions is the second benefit, not the trigger.
+
+Distinct from § Standing rule: plan-shaped tasks render as a commentable
+HTML document — that one publishes a *task's deliverable*; this publishes
+the *job's own* plan and prompt. A job containing a plan-shaped task
+produces both, at separate URLs.
+
+**Path:** `~/.claude/rebuild-prompt/jobs/<slug>.html` — outside any install
+tree, same reasoning as § Routing history. Slug is the job in 2–4 kebab-case
+words, undated: a job picked up next week has to resolve to the same path.
+
+**One job, one URL, for the job's whole life.** Publish via the Artifact
+tool, titling the page with the slug and never changing it — that title is
+what identifies the job later. Recover an existing job's page with the
+tool's `list` action, match on that title, and pass its `url` on every
+redeploy; publishing without it mints a second URL and strands the page the
+user has open. No match in the list — an older job, past the rows it
+returns — means say so and start a fresh page rather than assume there was
+never one. Never write the URL to `history.md`; § Routing history stores
+task shape only.
+
+**Page structure**, in order:
+
+1. **Header** — § Model plan's table when more than one model is in play,
+   then the § Review header lines, then what grilling ruled out plus any
+   job-level constraint settled since. Lists, not fenced blocks.
+2. **Plan** — one block per task in dependency order: what it does, the
+   capability and what it beat, `[model | effort]`, any constraint that
+   applies to it, its done-criterion. This *replaces* the "why these skills"
+   table rather than accompanying it — every task gets a block, including
+   the uncontested ones the table leaves out.
+3. **Segments** — one section each, carrying the fenced block from the Full
+   tier template below and nothing around it. Which later sections have a
+   prompt follows § Segments, unchanged: past a model or approval boundary
+   the next block is already written, so it ships on the page behind its own
+   switch line; past a finding boundary it isn't, so that section holds only
+   the provisional line until the results come back.
+4. **Status** — per task: `pending`, `live`, `done`. The closing checklist's
+   pass/fail reply updates it on the next publish.
+
+Commentable by the same mechanism, and the same reuse-an-installed-one-first
+order, as § Standing rule: plan-shaped tasks render as a commentable HTML
+document — one commentable block per task.
+
+**Read the page back** when continuing a job (SKILL.md § 1): it holds the
+picks, model plan, constraints and status whether or not the session still
+remembers them, along with any comment left on a task since the last
+publish — treat those as revision requests against the plan.
+
+**In chat, alongside the URL:** one line naming which segment is live.
+Nothing else — the page holds the header and the prompt, and a second copy
+in chat is the scan problem returning.
+
+**First publish adds a Flags entry** (§ Review header): the page carries the
+prompt verbatim, including whatever the raw ask named. Artifacts are private
+by default. Deliberately unlike § Routing history, which stores task shape
+only.
 
 ## Output tiers
 
@@ -286,8 +356,9 @@ Done = <criteria, one clause per task>.
 
 ### Full
 
-Any segment boundary, or 4+ tasks. Header, one fenced block per segment, the
-"why these skills" table, and the model plan:
+Any segment boundary, or 4+ tasks. Delivers through the job's page
+(§ Job artifact), which is where the "why these skills" table and model plan
+go too. The block itself:
 
 ```markdown
 ## Your rebuilt prompt
@@ -350,9 +421,10 @@ Then re-run /rebuild-prompt with those results to get the next one.
 **Flags:** <auth / setup preconditions / gaps / fallback substitutions — omit if none>
 ```
 
-One row per task in the "why these skills" table — never fewer rows than
-tasks. A table with a task missing demonstrates the exact anti-pattern the
-"never collapse the mapping" rule below warns against.
+One row per contested task in the "why these skills" table — never fewer
+rows than contested tasks. A contested task missing from it demonstrates the
+exact anti-pattern the "never collapse the mapping" rule below warns
+against; uncontested tasks are covered by the shortcut immediately below.
 
 **Uncontested-task shortcut.** Applies per task, at any job size — a 3-task
 job can have one uncontested task and two contested ones in the same

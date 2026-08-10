@@ -86,9 +86,10 @@ Given a rough prompt, `rebuild-prompt`:
    uncontested task's pick is stated in the output instead of asked about —
    this applies task-by-task, not by how many tasks the job has.
 4. **Lets you choose** which capability runs each contested task.
-5. **Returns a finished prompt** — one fenced block per segment, each task
-   tagged with a model and effort level, success criteria written in, and any
-   unresolved scope marked inline. If a task needs a different model than the
+5. **Returns a finished prompt** — one fenced block per segment (on a
+   published page, once a job is big enough to earn one), each task tagged with
+   a model and effort level, success criteria written in, and any unresolved
+   scope marked inline. If a task needs a different model than the
    one before it, the segment ends there and tells you exactly what to switch
    to before pasting the next one.
 
@@ -301,13 +302,11 @@ to release, see [CHANGELOG.md](CHANGELOG.md).
   it can see what comes next, so it does it. Physical separation into
   one-block-per-segment is the version that holds, and it costs you a paste
   per segment.
-- **A boundary is also where carried state is most exposed.** Everything a
-  later segment depends on — the model plan, the picks already made — lives
-  in this session's own text, not in any file. A generic auto-compact has no
-  way to know that text matters more than the rest of the transcript, so a
-  boundary is exactly where an uncontrolled compaction is most likely to
-  drop it. Naming what to keep, at the moment it's most at risk, is cheaper
-  than losing it.
+- **A boundary is the cheapest place in a job to compact.** By the time a
+  segment closes, everything the next one needs is already on the page — the
+  plan, the picks, the constraints, what grilling ruled out. So compacting
+  there costs nothing, and it pre-empts an uncontrolled auto-compact landing
+  mid-segment instead, where it would take the working reasoning with it.
 - **Not every task needs a skill.** Forcing one onto straightforward work
   in a well-patterned codebase makes the output worse. "None needed" is
   always an option.
@@ -317,6 +316,22 @@ to release, see [CHANGELOG.md](CHANGELOG.md).
   fix from two directions: a big job is genuinely hard to glance at before
   pasting. Output size now tracks job size instead of defaulting to the full
   template regardless of how small the ask was.
+- **The plan and the prompt stop sharing a surface.** Shrinking the text
+  only narrowed that conflict; a big job still has to say enough to execute.
+  The biggest jobs publish a page instead: the plan on top, written to be
+  read, and the prompt below it in a copy block, written to be run. You
+  review the plan and copy the prompt without reading it — which is what
+  finally makes the prompt's length stop costing you anything. It's keyed to
+  job size rather than to whether the job pauses mid-way, because the
+  pressure it relieves comes from how much there is to say.
+- **One page per job, not one per delivery.** It redeploys to the same URL
+  every time the job moves, so segment two arrives on the page already open
+  and segment one flips to done. The pipeline reads it back when you resume,
+  which is what makes it state rather than a record: a job survives a
+  compaction, a new session, or a reboot, because the page remembers what
+  the conversation can't. Smaller jobs keep no page, so a Compact job picked
+  up next week carries nothing and says so, rather than claiming a
+  continuity it can't back.
 - **The default effort should track what's actually at stake.** Every task
   defaulting to the top of the ladder prices a typo fix the same as a
   payment-path rewrite. Grilling already asks which assumption is costliest
