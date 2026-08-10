@@ -112,8 +112,8 @@ Compact and Full lead with the review header (`routing-guide.md` § Review
 header) — five lines, scannable before the fenced block, never inside it.
 Single-shot skips it — see `routing-guide.md` § Review header for why.
 
-Full tier delivers through a published page rather than chat
-(`routing-guide.md` § Job artifact).
+Delivery goes to the job's page or to chat per `routing-guide.md` § Job
+artifact.
 
 Mark ambiguity `[?]` inline rather than asking about it. Offer
 `/interview-me` afterward, only when it's in the session listing and what

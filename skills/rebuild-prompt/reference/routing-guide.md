@@ -244,16 +244,11 @@ says it; shorten to "tell me pass or fail — I'll flag any gap" with no list.
 
 ## Job artifact
 
-Full tier only: one published page per job, holding the plan to read and the
-prompt to copy, redeployed in place as the job moves. Compact and Single-shot
-deliver in chat — they're already short enough to scan where they land.
-
-Keyed to tier, not to segment count. The page exists first to stop the plan
-and the prompt sharing one surface, and that pressure comes from how much a
-job has to say, which is what tier already measures. A 6-task single-segment
-job is the heaviest thing this skill can deliver and needs the page most;
-gating on segments would route it to chat and publish a 2-task job instead.
-Surviving across sessions is the second benefit, not the trigger.
+A job spanning more than one segment: one published page per job, holding
+the plan to read and the prompt to copy, redeployed in place as the job
+moves. Anything delivered in a single block stays in chat. Per § Segments
+only Full tier spans segments at all, so this needs no tier check of its
+own. (Why: README.md § Design notes.)
 
 Distinct from § Standing rule: plan-shaped tasks render as a commentable
 HTML document — that one publishes a *task's deliverable*; this publishes
@@ -356,9 +351,10 @@ Done = <criteria, one clause per task>.
 
 ### Full
 
-Any segment boundary, or 4+ tasks. Delivers through the job's page
-(§ Job artifact), which is where the "why these skills" table and model plan
-go too. The block itself:
+Any segment boundary, or 4+ tasks. Delivered per § Job artifact; when that
+sends it to chat, the "why these skills" table and the model plan go below
+the block, and when it sends it to the page the per-task Plan blocks carry
+that table's content instead. The block itself:
 
 ```markdown
 ## Your rebuilt prompt

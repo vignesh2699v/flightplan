@@ -87,7 +87,7 @@ Given a rough prompt, `rebuild-prompt`:
    this applies task-by-task, not by how many tasks the job has.
 4. **Lets you choose** which capability runs each contested task.
 5. **Returns a finished prompt** — one fenced block per segment (on a
-   published page, once a job is big enough to earn one), each task tagged with
+   published page, once a job runs to more than one), each task tagged with
    a model and effort level, success criteria written in, and any unresolved
    scope marked inline. If a task needs a different model than the
    one before it, the segment ends there and tells you exactly what to switch
@@ -318,12 +318,15 @@ to release, see [CHANGELOG.md](CHANGELOG.md).
   template regardless of how small the ask was.
 - **The plan and the prompt stop sharing a surface.** Shrinking the text
   only narrowed that conflict; a big job still has to say enough to execute.
-  The biggest jobs publish a page instead: the plan on top, written to be
-  read, and the prompt below it in a copy block, written to be run. You
-  review the plan and copy the prompt without reading it — which is what
-  finally makes the prompt's length stop costing you anything. It's keyed to
-  job size rather than to whether the job pauses mid-way, because the
-  pressure it relieves comes from how much there is to say.
+  A job that runs to more than one segment publishes a page instead: the
+  plan on top, written to be read, and the prompt below it in a copy block,
+  written to be run. You review the plan and copy the prompt without reading
+  it — which is what finally makes the prompt's length stop costing you
+  anything. The trigger is whether you'll come back to the job, not how big
+  it is: a page for something delivered once is scaffolding around a single
+  paste. That distinction came from measurement, not argument — the trigger
+  had already been reasoned into two different positions before a fixture
+  run settled it.
 - **One page per job, not one per delivery.** It redeploys to the same URL
   every time the job moves, so segment two arrives on the page already open
   and segment one flips to done. The pipeline reads it back when you resume,
