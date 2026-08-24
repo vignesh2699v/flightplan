@@ -3,6 +3,13 @@
 # markdown stripped), substring against the flagged passage.
 
 # README § Design notes quotes the funnel output string verbatim as an
-# illustration; routing-guide.md owns the exact string. Quoting it is the
+# illustration; mechanics.md owns the exact string. Quoting it is the
 # point — a paraphrase would misdocument the output format.
 the funnel 14 matched these 3 ranked highest
+
+# The skill's one-line pitch. SKILL.md's frontmatter needs it so Claude Code
+# can decide when to invoke; README needs it as its opening sentence. Both
+# are required, so they describe the product in the same words on purpose —
+# rewording one to satisfy the lint would make the docs worse, not better.
+one plan holding its context its tickets and a live tracker
+over one ticket at a time with the

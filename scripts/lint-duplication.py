@@ -3,9 +3,9 @@
 
 Three files describe one system, and each owns a different job:
 
-    skills/rebuild-prompt/SKILL.md               imperative pipeline steps
-    skills/rebuild-prompt/reference/...guide.md  mechanics, strings, templates
-    README.md                                    rationale
+    skills/flightplan/SKILL.md                   imperative pipeline steps
+    skills/flightplan/reference/mechanics.md     mechanics, strings, templates
+    docs/design-notes.md                         rationale
 
 Any rule written into two of them will drift apart, and this one has three
 times already -- the v1.7 audit caught it, then v1.11's own review caught it
@@ -16,8 +16,8 @@ consecutive words appearing in two places fails the check.
 Three things are excluded, because each is the pattern we want rather than
 the bug:
 
-  fenced code blocks      the README's worked example is supposed to show
-                          what the routing guide specifies
+  fenced code blocks      a template and an example of it filled in are
+                          supposed to match; that is not drift
   cross-reference lines   a line naming another file, or a section with a
                           section mark, is a pointer -- pointers are the fix
   paragraph and heading   spans never merge across a blank line or a
@@ -42,9 +42,9 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 
 SOURCES = (
-    "skills/rebuild-prompt/SKILL.md",
-    "skills/rebuild-prompt/reference/routing-guide.md",
-    "README.md",
+    "skills/flightplan/SKILL.md",
+    "skills/flightplan/reference/mechanics.md",
+    "docs/design-notes.md",
 )
 
 ALLOWLIST = "scripts/duplication-allowlist.txt"
@@ -54,7 +54,7 @@ DEFAULT_SHINGLE = 8
 # paragraph, heading, fence and pointer boundaries stay un-crossable.
 BARRIER = "\x00"
 
-POINTER = re.compile(r"routing-guide\.md|SKILL\.md|README\.md|§")
+POINTER = re.compile(r"mechanics\.md|SKILL\.md|design-notes\.md|§")
 HEADING = re.compile(r"^\s{0,3}#{1,6}\s")
 LINK = re.compile(r"\[([^\]]*)\]\([^)]*\)")
 MARKUP = re.compile(r"[`*_>|#\[\]()]+")
