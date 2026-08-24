@@ -144,15 +144,19 @@
     color: var(--ink);
   }
 
-  .steps { display: flex; flex-direction: column; gap: 2px; }
+  .steps {
+    background: var(--surface);
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
   .step {
     display: grid;
     grid-template-columns: 46px 1fr;
     gap: 18px;
-    background: var(--surface);
-    border-left: 3px solid var(--rule);
-    padding: 16px 18px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--rule-soft);
   }
+  .step:last-child { border-bottom: 0; }
   .step-n {
     font-family: var(--mono);
     font-size: 22px;
@@ -245,37 +249,28 @@
   .rowtext { color: var(--ink-soft); }
   .ev { font-family: var(--mono); font-size: 12px; color: var(--accent); }
 
-  .gone {
-    background: var(--surface);
-    border-left: 3px solid var(--strike);
-    padding: 15px 18px;
+  .gone, .risk {
+    padding: 16px 20px;
     margin-bottom: 10px;
+    border: 1px solid var(--rule);
   }
-  .gone h3 {
-    font-family: var(--display);
-    font-size: 16px;
-    font-weight: 600;
-    margin: 0 0 4px;
-    color: var(--strike);
-    text-decoration: line-through;
-    text-decoration-thickness: 1.5px;
-  }
-  .gone p { font-size: 15px; color: var(--ink-soft); margin: 0; }
+  .gone { background: var(--surface-sunk); }
+  .risk { background: var(--amber-soft); border-color: var(--amber); }
 
-  .risk {
-    background: var(--amber-soft);
-    border-left: 3px solid var(--amber);
-    padding: 16px 18px;
-    margin-bottom: 12px;
-  }
-  .risk h3 {
+  .gone h3, .risk h3 {
     font-family: var(--display);
     font-size: 16px;
     font-weight: 600;
     margin: 0 0 5px;
-    color: var(--amber);
   }
-  .risk p { font-size: 15px; margin: 0; color: var(--ink-soft); }
+  .gone h3 {
+    color: var(--strike);
+    text-decoration: line-through;
+    text-decoration-thickness: 1.5px;
+  }
+  .risk h3 { color: var(--amber); }
+
+  .gone p, .risk p { font-size: 15px; color: var(--ink-soft); }
 
   ul { padding-left: 20px; margin: 0 0 15px; max-width: 68ch; }
   li { margin-bottom: 7px; color: var(--ink-soft); }
