@@ -60,14 +60,25 @@ deliberately.
    flag. First publish adds a Flags entry: the page carries every ticket
    prompt verbatim, including whatever the raw ask named, and artifacts are
    private by default.
-2. **Tickets** — one block each, in dependency order: ID, title, the
-   capability and what it beat, `[model | effort]`, any constraint that
-   applies, its done-criterion. No prompt bodies here. IDs run `T-01`
+2. **Tickets** — an accordion, in dependency order, built on `<details>` and
+   `<summary>` so it works without script and stays keyboard-reachable.
+   Collapsed by default; the `live` one opens on load. The summary row
+   carries ID, title, status and capability — enough to scan the whole plan
+   without opening anything. Expanded, it adds what the ticket does, what
+   the capability beat, `[model | effort]`, any constraint that applies, and
+   the done-criterion. No prompt bodies anywhere on the page. IDs run `T-01`
    upward and stay fixed for the plan's life — the writeback addresses a
    ticket by ID, so renumbering breaks it.
-3. **Tracker** — one row per ticket. Status, one line of outcome, evidence
-   link, and on every finished row a quiet marker that a handoff is safe
-   here — except the last, which says the plan is closed instead.
+3. **Tracker** — one row per ticket: ID, status, and an outcome button. The
+   outcome text is never inline; the button opens a `<dialog>` holding what
+   came out of that ticket and its evidence link, dismissible by Escape or
+   a close control. Rows carry a quiet marker that a handoff is safe here —
+   except the last, which says the plan is closed instead. A ticket with no
+   outcome yet shows no button rather than an empty one.
+
+The tracker is the part returned to most often, so it stays a status board:
+every status readable in one pass, every explanation one click away rather
+than in the way.
 
 Status vocabulary is `pending`, `live`, `done`, and `stale` for a ticket
 whose plan a finding invalidated.

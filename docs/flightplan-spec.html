@@ -219,6 +219,96 @@
   .fields span::before { content: "\00B7  "; color: var(--muted); }
   .fields em { color: var(--muted); font-style: normal; }
 
+  /* accordion tickets */
+  .tickets { display: flex; flex-direction: column; gap: 4px; }
+  .tk { border: 1px solid var(--rule-soft); background: var(--ground); }
+  .tk[open] { border-color: var(--rule); }
+  .tk summary {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 9px 12px;
+    cursor: pointer;
+    list-style: none;
+    font-size: 13.5px;
+  }
+  .tk summary::-webkit-details-marker { display: none; }
+  .tk summary::before {
+    content: "\25B8";
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .tk[open] summary::before { content: "\25BE"; }
+  .tk summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .tk-title { color: var(--ink); font-weight: 600; flex: 1 1 auto; }
+  .tk-cap { font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+  .tk-body {
+    padding: 11px 12px 13px 30px;
+    border-top: 1px solid var(--rule-soft);
+  }
+  .tk-body p { font-size: 13.5px; margin: 0 0 8px; color: var(--ink-soft); }
+  .tk-body p:last-child { margin-bottom: 0; }
+  .tk-meta { font-size: 12.5px; color: var(--muted); }
+
+  /* outcome overlay */
+  .out {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .out:hover { background: var(--accent-soft); }
+  .out:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .safe { font-size: 11.5px; color: var(--muted); }
+
+  dialog {
+    border: 1px solid var(--rule);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 22px 24px;
+    max-width: 460px;
+    width: calc(100% - 40px);
+    font-family: var(--body);
+  }
+  dialog::backdrop { background: rgb(10 16 20 / 0.55); }
+  .dlg-h {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 3px;
+    color: var(--ink);
+  }
+  .dlg-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 12px;
+  }
+  dialog p { font-size: 14.5px; margin: 0 0 14px; color: var(--ink-soft); }
+  .dlg-ev { display: block; font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 16px; }
+  dialog button {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border: 1px solid var(--rule);
+    background: var(--ground);
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  dialog button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   .rows { display: flex; flex-direction: column; gap: 7px; }
   .row {
     display: flex;
@@ -374,36 +464,66 @@
         <p class="mock-note">Every field shows where it came from. Since inference does the work, the source trail is how a wrong inference gets caught in two seconds instead of three tickets later. The last two fields are the ones reading rarely settles &mdash; when grilling has questions to spend, they go here first.</p>
       </div>
       <div class="mock-band">
-        <span class="mock-label">Tickets &mdash; one verifiable outcome each</span>
-        <p class="mock-note" style="margin-top:0">Title, capability and done-criterion at approval. The full prompt arrives when the ticket goes live. Typically 8&ndash;15 for a real project.</p>
+        <span class="mock-label">Tickets &mdash; accordion, collapsed by default</span>
+        <div class="tickets">
+          <details class="tk">
+            <summary><span class="tid">T-01</span><span class="tk-title">Audit the onboarding flow</span><span class="pill done">Done</span><span class="tk-cap">/impeccable</span></summary>
+            <div class="tk-body">
+              <p>Walk the flow end to end as a genuinely first-time user and rank every friction point by severity, each tied to the step it lives on.</p>
+              <p class="tk-meta">Beat <code>/ecc:click-path-audit</code> &mdash; maps a path, doesn't judge it &middot; <code>[opus-5 | high]</code> &middot; Read-only, seeded accounts</p>
+              <p class="tk-meta"><b>Done =</b> every issue named with its step and <code>file:line</code>, labelled targeted-fix or structural.</p>
+            </div>
+          </details>
+          <details class="tk">
+            <summary><span class="tid">T-02</span><span class="tk-title">Redesign the flow from the findings</span><span class="pill done">Done</span><span class="tk-cap">/ux-flow-plan</span></summary>
+            <div class="tk-body">
+              <p>Turn the audit's verdict into a step-by-step flow spec, addressing each finding or declining it with a reason.</p>
+              <p class="tk-meta">Beat <code>/superpowers:writing-plans</code> &mdash; generic plan shape, no flow vocabulary &middot; <code>[opus-5 | medium]</code></p>
+            </div>
+          </details>
+          <details class="tk" open>
+            <summary><span class="tid">T-03</span><span class="tk-title">Implement the new step order</span><span class="pill live">Live</span><span class="tk-cap">/impeccable</span></summary>
+            <div class="tk-body">
+              <p>Build the flow the spec describes, matching its structure and copy exactly, flagging anywhere the spec was ambiguous rather than guessing.</p>
+              <p class="tk-meta">Gated by <code>/code-review</code> as a fresh reader &middot; <code>[opus-5 | high]</code></p>
+              <p class="tk-meta"><b>Done =</b> the new flow runs end to end locally and the review pass is closed out.</p>
+            </div>
+          </details>
+          <details class="tk">
+            <summary><span class="tid">T-04</span><span class="tk-title">Write tests for the new flow</span><span class="pill wait">Pending</span><span class="tk-cap">ecc:e2e-runner</span></summary>
+            <div class="tk-body">
+              <p>Cover the happy path and every branch the redesign introduced, plus regression coverage so the old issues can't return silently.</p>
+              <p class="tk-meta">Verification-shaped work routes to a subagent &middot; <code>[sonnet-5 | medium]</code></p>
+            </div>
+          </details>
+        </div>
+        <p class="mock-note">The summary row carries enough to scan the whole plan without opening anything. The live ticket opens on load. Built on <code>&lt;details&gt;</code>, so it works with no script and stays keyboard-reachable.</p>
       </div>
       <div class="mock-band">
-        <span class="mock-label">Tracker &mdash; the only live part</span>
+        <span class="mock-label">Tracker &mdash; status board, detail on demand</span>
         <div class="rows">
           <div class="row">
             <span class="tid">T-01</span>
             <span class="pill done">Done</span>
-            <span class="rowtext">Audit found 6 friction points, 2 structural</span>
-            <span class="ev">&rarr; screenshots</span>
+            <button class="out" data-dlg="dlg1">Outcome</button>
+            <span class="safe">handoff safe here</span>
           </div>
           <div class="row">
             <span class="tid">T-02</span>
             <span class="pill done">Done</span>
-            <span class="rowtext">Redesign covers 5 of 6; one deferred with reason</span>
-            <span class="ev">&rarr; artifact</span>
+            <button class="out" data-dlg="dlg2">Outcome</button>
+            <span class="safe">handoff safe here</span>
           </div>
           <div class="row">
             <span class="tid">T-03</span>
             <span class="pill live">Live</span>
-            <span class="rowtext">Implement the new step order</span>
           </div>
           <div class="row">
             <span class="tid">T-04</span>
             <span class="pill wait">Pending</span>
-            <span class="rowtext">Write tests for the new flow</span>
           </div>
         </div>
-        <p class="mock-note">Each finished row also carries a quiet &ldquo;safe to hand off here&rdquo; marker &mdash; always true at a ticket boundary, always there when wanted, never interrupting when not.</p>
+        <p class="mock-note">Outcome text never sits inline &mdash; the button opens it in an overlay, so every status stays readable in one pass. A ticket with nothing to report shows no button rather than an empty one.</p>
       </div>
     </div>
   </section>
@@ -496,3 +616,34 @@
   </footer>
 
 </div>
+
+<dialog id="dlg1">
+  <p class="dlg-h">Audit the onboarding flow</p>
+  <span class="dlg-id">T-01 &middot; done</span>
+  <p>Six friction points found, two of them structural rather than cosmetic: the email step asks before it has earned anything, and the flow has no recoverable state after an abandoned verification. The other four are copy and error-state fixes.</p>
+  <span class="dlg-ev">&rarr; screenshots, 3 breakpoints</span>
+  <button data-close>Close</button>
+</dialog>
+
+<dialog id="dlg2">
+  <p class="dlg-h">Redesign the flow from the findings</p>
+  <span class="dlg-id">T-02 &middot; done</span>
+  <p>Spec covers five of six findings. The sixth &mdash; moving verification after first value &mdash; is deferred with a reason: it needs a backend change that isn't in this plan's scope.</p>
+  <span class="dlg-ev">&rarr; commentable artifact</span>
+  <button data-close>Close</button>
+</dialog>
+
+<script>
+  document.querySelectorAll(".out").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var d = document.getElementById(b.dataset.dlg);
+      if (d) { d.showModal(); }
+    });
+  });
+  document.querySelectorAll("dialog [data-close]").forEach(function (b) {
+    b.addEventListener("click", function () { b.closest("dialog").close(); });
+  });
+  document.querySelectorAll("dialog").forEach(function (d) {
+    d.addEventListener("click", function (e) { if (e.target === d) { d.close(); } });
+  });
+</script>
