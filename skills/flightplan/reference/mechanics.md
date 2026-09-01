@@ -66,10 +66,15 @@ deliberately.
    carries ID, title, status and capability — enough to scan the whole plan
    without opening anything. Expanded, it adds what the ticket does, what
    the capability beat, `[model | effort]`, any constraint that applies, and
-   the done-criterion. No prompt bodies anywhere on the page. IDs run `T-01`
-   upward and stay fixed for the plan's life — the writeback addresses a
-   ticket by ID, so renumbering breaks it.
-3. **Tracker** — one row per ticket: ID, status, and an outcome button. The
+   the done-criterion. No prompt bodies in this list — the live one has its
+   own section below. IDs run `T-01` upward and stay fixed for the plan's
+   life — the writeback addresses a ticket by ID, so renumbering breaks it.
+3. **Live prompt** — the current ticket's full prompt, in a copy block,
+   written just-in-time against what the tickets before it produced. Exactly
+   one at a time: publishing the next ticket replaces it. This is the half
+   of the page written to be run rather than read, and it is the only place
+   a prompt body appears.
+4. **Tracker** — one row per ticket: ID, status, and an outcome button. The
    outcome text is never inline; the button opens a `<dialog>` holding what
    came out of that ticket and its evidence link, dismissible by Escape or
    a close control. Rows carry a quiet marker that a handoff is safe here —

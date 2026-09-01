@@ -1,6 +1,67 @@
 # Changelog
 
-This file mirrors the [GitHub releases](https://github.com/vignesh2699v/claude-rebuild-prompt/releases) for this repo. Every future release is appended here as well as published there.
+This file mirrors the [GitHub releases](https://github.com/vignesh2699v/claude-flightplan/releases) for this repo. Every future release is appended here as well as published there.
+
+## v2.1 — accordion tickets, outcomes behind an overlay
+
+**The plan page stays scannable however many tickets it holds.** Two changes,
+both aimed at that.
+
+**Tickets are an accordion**, collapsed by default with the live one open,
+so the whole plan reads from its summary rows without opening anything.
+**Tracker outcomes moved behind a button** that opens an overlay, so every
+status reads in one pass and the explanation is one click away rather than in
+the way. Full anatomy in `reference/mechanics.md` § The plan page.
+
+Both use native elements — `<details>` and `<dialog>` — so the accordion
+needs no script at all and the overlay gets Escape-to-close and focus
+trapping without writing either.
+
+The [spec](docs/flightplan-spec.html)'s anatomy mock is now a working demo
+rather than a picture — real accordions, real overlays, clickable in the
+published artifact. Showing an
+interaction is the point of that section, and a static mock is the one thing
+that can't.
+
+## v2.0 — rebuild-prompt becomes flightplan
+
+**The contract outgrew the name.** It plans a session now, not a prompt: read
+the project, grill the premise against what was read, file one page holding
+the context, the tickets and a live tracker, then serve one ticket at a time
+with its skill attached. Each ticket's own prompt tells the running session to
+write its result back, so the tracker fills itself in and the contract —
+never execute — still holds. Settled by six rounds of grilling; the design is
+in [docs/flightplan-spec.html](docs/flightplan-spec.html).
+
+**Deleted: segments, and the model and finding boundaries**, because one
+ticket per paste stops every time — which is what those existed to arrange by
+hand. The approval boundary survives as a standing rule instead: ticket size
+alone does not isolate a destructive step, so anything irreversible still
+gets its own ticket.
+
+**Also deleted: the three output tiers.** What replaces them is two paths — file a
+plan, or answer a single-outcome ask in one routed line.
+
+**README is now the problem, install and usage. Nothing else.** The rationale
+moved to [docs/design-notes.md](docs/design-notes.md), which is where the
+skill files point and where the duplication lint follows it.
+
+`/simplify` found six real defects before this landed. Two would have broken
+the skill: the plan could never close — every writeback said "set status, add
+outcome, link evidence" and every finished row advertised a handoff, while
+SKILL.md claimed done meant "the page says the plan is closed", a state
+nothing was instructed to reach; and resume served stale tickets, since
+"first ticket that isn't done" picks up one a finding already invalidated.
+Also fixed: the writeback addressed tickets by an ID nothing defined; the
+plan page routed its commentable blocks through a rule whose own text says it
+publishes separately from the plan page; three design notes described
+mechanisms the build doesn't have; and `docs/design-notes.md` was untracked,
+so it would have shipped a 404 from the README's own link.
+
+Known gaps, deliberately left: several rules are still stated in both
+SKILL.md and mechanics.md in different words, which the lint can't catch; and
+the one-liner path reads all of mechanics.md to reach a template that belongs
+inline.
 
 ## v1.16 — the publish trigger is one condition, not two
 

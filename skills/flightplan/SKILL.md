@@ -99,8 +99,10 @@ Write the live ticket's full prompt now, against what the tickets before it
 actually produced. Never pre-write a later ticket: it would encode
 assumptions the earlier work may disprove.
 
-Mark the ticket `live` on the page. Deliver the prompt and nothing else —
-one fenced block, ready to paste.
+Mark the ticket `live` on the page and publish its prompt into the page's
+live-prompt block (`mechanics.md` § The plan page). In chat, give the URL
+and one line naming which ticket is live — never a second copy of the
+prompt.
 
 Resuming a project: read its page and continue from the first ticket marked
 `pending`. Re-read the project first, since anything may have changed. Say
