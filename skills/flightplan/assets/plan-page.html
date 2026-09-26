@@ -1,0 +1,531 @@
+<meta charset="utf-8">
+<title>Untitled plan</title>
+<script type="application/x-ndjson" id="plan-data">
+{"kind":"plan","placeholder":true}
+</script><!--flightplan:data-->
+<!--flightplan:prompts-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --ground: #EEF1F4;
+    --surface: #FFFFFF;
+    --surface-sunk: #E4E9EE;
+    --ink: #141A21;
+    --ink-soft: #3D4954;
+    --muted: #66737F;
+    --rule: #CBD4DC;
+    --rule-soft: #DCE3E9;
+    --accent: #0B5FA5;
+    --accent-soft: #E1ECF6;
+    --done: #226B4C;
+    --done-soft: #DFEFE7;
+    --attn: #9A5A0E;
+    --attn-soft: #F6EBDA;
+    --fail: #A3302A;
+    --fail-soft: #F7E1DF;
+    --wait: #8995A1;
+
+    --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --body: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0E1418;
+      --surface: #161E25;
+      --surface-sunk: #0A0F13;
+      --ink: #DDE5EC;
+      --ink-soft: #AEBBC7;
+      --muted: #82909C;
+      --rule: #2A363F;
+      --rule-soft: #1E2831;
+      --accent: #63AEEA;
+      --accent-soft: #16293A;
+      --done: #5FBF93;
+      --done-soft: #12271E;
+      --attn: #D89442;
+      --attn-soft: #2C2113;
+      --fail: #E57B72;
+      --fail-soft: #2E1715;
+      --wait: #5E6B77;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0E1418;
+    --surface: #161E25;
+    --surface-sunk: #0A0F13;
+    --ink: #DDE5EC;
+    --ink-soft: #AEBBC7;
+    --muted: #82909C;
+    --rule: #2A363F;
+    --rule-soft: #1E2831;
+    --accent: #63AEEA;
+    --accent-soft: #16293A;
+    --done: #5FBF93;
+    --done-soft: #12271E;
+    --attn: #D89442;
+    --attn-soft: #2C2113;
+    --fail: #E57B72;
+    --fail-soft: #2E1715;
+    --wait: #5E6B77;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    padding-inline: 16px;
+    padding-block: 0 72px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 44px; }
+  h1, h2, h3, .label, .pill, button { font-family: var(--display); }
+  code, pre, .id, .cmd { font-family: var(--mono); }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* masthead */
+  .masthead { padding-top: 40px; display: flex; flex-direction: column; gap: 12px; }
+  .eyebrow { font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+  h1 { margin: 0; font-weight: 700; font-size: clamp(32px, 6vw, 48px); line-height: 1.05; letter-spacing: -0.02em; text-wrap: balance; }
+  .outcome { margin: 0; font-size: 19px; color: var(--ink-soft); max-width: 62ch; }
+
+  /* route strip: one waypoint per ticket, in order */
+  .route { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .route ol { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; }
+  .route li { flex: 1 1 0; display: flex; align-items: center; min-width: 0; }
+  .route li:last-child { flex: 0 0 auto; }
+  .route li:not(:last-child)::after { content: ""; flex: 1 1 auto; height: 2px; background: var(--rule); margin-inline: 3px; }
+  .route li.done:not(:last-child)::after { background: var(--done); }
+  .wp { width: 14px; height: 14px; border-radius: 50%; flex: 0 0 auto; border: 2px solid var(--wait); background: var(--surface); }
+  .wp.done { background: var(--done); border-color: var(--done); }
+  .wp.live { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 3px var(--accent-soft); position: relative; }
+  .wp.live::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--accent); }
+  .wp.stale { border-color: var(--attn); background: var(--attn-soft); }
+  .wp.failed { border-color: var(--fail); background: var(--fail-soft); }
+  .tally { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--display); font-size: 14px; color: var(--ink-soft); }
+  .tally b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* section headings */
+  h2 { margin: 0 0 14px; font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .section-note { margin: -8px 0 14px; font-size: 15px; color: var(--muted); }
+
+  /* the one bordered panel: what to do now */
+  .now { background: var(--surface); border: 1px solid var(--rule); border-top: 3px solid var(--accent); padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 14px; }
+  .now.closed { border-top-color: var(--done); }
+  .now.paused { border-top-color: var(--attn); }
+  .now-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+  .now h3 { margin: 0; font-size: 22px; font-weight: 700; line-height: 1.2; text-wrap: balance; flex: 1 1 18ch; }
+  .now p { margin: 0; max-width: 64ch; }
+  .facts { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; font-size: 15.5px; }
+  .facts dt { font-family: var(--display); font-weight: 600; font-size: 13px; letter-spacing: 0.02em; color: var(--muted); padding-top: 2px; }
+  .facts dd { margin: 0; color: var(--ink-soft); min-width: 0; overflow-wrap: anywhere; }
+  .steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; font-size: 15.5px; color: var(--ink-soft); }
+  .cmd { font-size: 13px; background: var(--surface-sunk); padding: 1px 6px; border-radius: 3px; color: var(--ink); white-space: nowrap; }
+  .prompt-box { border: 1px solid var(--rule); background: var(--surface-sunk); }
+  .prompt-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--rule); }
+  .prompt-bar .label { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  pre.prompt { margin: 0; padding: 14px; max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 13px; line-height: 1.6; color: var(--ink); }
+  button.copy { font-size: 14px; font-weight: 600; padding: 7px 16px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); cursor: pointer; border-radius: 2px; }
+  button.copy:hover { filter: brightness(1.08); }
+  button.copy.ok { background: var(--done); border-color: var(--done); }
+
+  /* status pills: word + shape, never colour alone */
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; padding: 2px 9px 2px 7px; border-radius: 2px; white-space: nowrap; background: var(--surface-sunk); color: var(--muted); }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid currentColor; }
+  .pill.done { background: var(--done-soft); color: var(--done); }
+  .pill.done::before { background: currentColor; }
+  .pill.live { background: var(--accent-soft); color: var(--accent); }
+  .pill.live::before { background: currentColor; box-shadow: 0 0 0 2px var(--accent-soft), 0 0 0 3px currentColor; width: 5px; height: 5px; }
+  .pill.stale { background: var(--attn-soft); color: var(--attn); }
+  .pill.stale::before { border-radius: 1px; transform: rotate(45deg); }
+  .pill.failed { background: var(--fail-soft); color: var(--fail); }
+  .pill.failed::before { border-radius: 0; }
+
+  /* flight strips: one row per ticket */
+  .strips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .strip { background: var(--surface); border: 1px solid var(--rule-soft); }
+  .strip.live { border-color: var(--accent); }
+  .strip summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 58px 1fr auto; gap: 4px 12px; padding: 13px 14px 14px 12px; align-items: baseline; }
+  .strip summary::-webkit-details-marker { display: none; }
+  .strip .id { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .strip .title { font-family: var(--display); font-weight: 600; font-size: 16.5px; line-height: 1.3; color: var(--ink); }
+  .strip .why, .strip .result { display: block; grid-column: 2 / 4; margin: 0; font-size: 15px; color: var(--ink-soft); max-width: 66ch; }
+  .strip .result { color: var(--ink); }
+  .strip .result .label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--done); margin-right: 6px; }
+  .strip.failed .result .label { color: var(--fail); }
+  .strip.stale .result .label { color: var(--attn); }
+  .strip .more { grid-column: 2 / 4; font-family: var(--display); font-size: 12.5px; color: var(--muted); }
+  .strip[open] .more .show { display: none; }
+  .strip:not([open]) .more .hide { display: none; }
+  .detail { border-top: 1px solid var(--rule-soft); padding: 14px 14px 16px 82px; display: flex; flex-direction: column; gap: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-family: var(--display); font-size: 12.5px; padding: 2px 8px; border: 1px solid var(--rule); color: var(--ink-soft); border-radius: 2px; }
+  details.inner summary { font-family: var(--display); font-size: 13.5px; color: var(--accent); cursor: pointer; }
+  details.inner pre { margin: 8px 0 0; padding: 12px; background: var(--surface-sunk); white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12.5px; line-height: 1.55; max-height: 280px; overflow: auto; }
+
+  /* background */
+  .context { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .context li { display: grid; grid-template-columns: 200px 1fr; gap: 2px 16px; }
+  .context .field { font-family: var(--display); font-weight: 600; font-size: 14.5px; color: var(--ink); }
+  .context .value { color: var(--ink-soft); font-size: 15.5px; }
+  .context .source { grid-column: 2; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .context .unset { font-style: italic; color: var(--muted); }
+  .flags { margin: 18px 0 0; padding: 12px 14px; background: var(--attn-soft); border: 1px solid var(--attn); display: flex; flex-direction: column; gap: 6px; font-size: 15px; color: var(--ink); }
+  .flags .label { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--attn); }
+  .approach { margin: 0 0 18px; max-width: 64ch; color: var(--ink-soft); }
+
+  /* how this page works */
+  .how { border-top: 1px solid var(--rule); padding-top: 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px 28px; font-size: 14.5px; color: var(--ink-soft); }
+  .how h2 { margin-bottom: 8px; }
+  .how p, .how dl { margin: 0; }
+  .how dl { display: flex; flex-direction: column; gap: 6px; }
+  .how dt { display: inline; font-family: var(--display); font-weight: 600; color: var(--ink); }
+  .how dd { display: inline; margin: 0; }
+  .meta { font-family: var(--mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+  .warn { background: var(--fail-soft); border: 1px solid var(--fail); padding: 10px 14px; font-size: 14.5px; }
+  .warn pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; margin: 8px 0 0; }
+
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .strip summary { grid-template-columns: 1fr auto; }
+    .strip .id { grid-column: 1 / 3; }
+    .strip .why, .strip .result, .strip .more { grid-column: 1 / 3; }
+    .detail { padding-left: 14px; }
+    .context li { grid-template-columns: 1fr; }
+    .context .source { grid-column: 1; }
+    .facts { grid-template-columns: 1fr; gap: 2px 0; }
+    .facts dd { margin-bottom: 8px; }
+    .wp { width: 12px; height: 12px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    button.copy { transition: background-color 160ms ease; }
+  }
+</style>
+
+<div class="wrap" id="app">
+  <noscript><p>This plan page needs JavaScript to draw itself. The plan's data is at the top of this file's source.</p></noscript>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var MODELS = {
+    haiku: "Haiku, the fastest and lowest-cost model",
+    sonnet: "Sonnet, the everyday model",
+    opus: "Opus, the model for complex work",
+    fable: "Fable, the model for the hardest problems"
+  };
+  var STATUS = {
+    done: "Done",
+    live: "Now",
+    pending: "Up next",
+    stale: "Needs a new plan",
+    failed: "Didn't pass"
+  };
+
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+  function unescapeClose(s) { return String(s).replace(/<\\\//g, "</"); }
+  function fmtDate(s) {
+    if (!s) return "";
+    var d = new Date(s + (String(s).length === 10 ? "T12:00:00" : ""));
+    if (isNaN(d)) return String(s);
+    try { return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); }
+    catch (e) { return String(s); }
+  }
+  function isUrl(s) { return /^https?:\/\//i.test(String(s || "")); }
+
+  // Read the append-only log: one JSON object per line, latest line wins.
+  var bad = [];
+  var plan = null, context = [], flags = [], order = [], byId = {}, status = {}, history = {}, url = "", closed = null, updated = "", seq = 0;
+  document.getElementById("plan-data").textContent.split(/\r?\n/).forEach(function (line) {
+    var t = line.trim();
+    if (!t) return;
+    var o;
+    try { o = JSON.parse(t); } catch (e) { bad.push(t); return; }
+    if (!o || typeof o !== "object") { bad.push(t); return; }
+    if (o.at && o.at > updated) updated = o.at;
+    switch (o.kind) {
+      case "plan": plan = Object.assign(plan || {}, o); if (o.created && o.created > updated) updated = o.created; break;
+      case "context":
+        var i = context.findIndex(function (c) { return c.field === o.field; });
+        if (i >= 0) context[i] = o; else context.push(o);
+        break;
+      case "flag": flags.push(o); break;
+      case "ticket":
+        if (!byId[o.id]) order.push(o.id);
+        byId[o.id] = o;
+        break;
+      case "status": o._seq = ++seq; status[o.id] = o; (history[o.id] = history[o.id] || []).push(o); break;
+      case "url": url = o.url || url; break;
+      case "close": closed = o; break;
+      default: bad.push(t);
+    }
+  });
+
+  var tickets = order.map(function (id) { return byId[id]; });
+
+  var prompts = {};
+  document.querySelectorAll('script[type="text/plain"][data-prompt]').forEach(function (s) {
+    prompts[s.getAttribute("data-prompt")] = unescapeClose(s.textContent.replace(/^\s*\n/, "").replace(/\s+$/, ""));
+  });
+
+  function stateOf(t) { return status[t.id] ? status[t.id].status : "pending"; }
+  function runsOn(t) {
+    var m = MODELS[t.model] || (t.model ? t.model : "the session's current model");
+    var where = t.where === "subagent" ? "in a helper agent" : "in this conversation";
+    var effort = t.effort && t.model !== "haiku" ? " at " + t.effort + " effort" : "";
+    return m.charAt(0).toUpperCase() + m.slice(1) + effort + ", " + where;
+  }
+  function pill(state) { return el("span", "pill " + state, STATUS[state] || state); }
+
+  var app = document.getElementById("app");
+  if (bad.length) {
+    var w = el("div", "warn", bad.length === 1 ? "One line of this plan's data couldn't be read, so it's left out below." : bad.length + " lines of this plan's data couldn't be read, so they're left out below.");
+    var wp = el("pre", null, bad.join("\n"));
+    w.appendChild(wp);
+    app.appendChild(w);
+  }
+
+  if (!plan || plan.placeholder) {
+    var empty = el("header", "masthead");
+    empty.appendChild(el("span", "eyebrow", "Flight plan"));
+    empty.appendChild(el("h1", null, "This plan hasn't been filled in yet"));
+    empty.appendChild(el("p", "outcome", "Run /flightplan in Claude Code on the work you're about to start, and this page fills itself in."));
+    app.appendChild(empty);
+    return;
+  }
+
+  var counts = { done: 0, live: 0, pending: 0, stale: 0, failed: 0 };
+  tickets.forEach(function (t) { counts[stateOf(t)] = (counts[stateOf(t)] || 0) + 1; });
+  var live = null;
+  tickets.forEach(function (t) { if (stateOf(t) === "live" && (!live || status[t.id]._seq > status[live.id]._seq)) live = t; });
+  var firstStale = tickets.filter(function (t) { return stateOf(t) === "stale"; })[0];
+  var nextPending = tickets.filter(function (t) { return stateOf(t) === "pending"; })[0];
+
+  if (plan.title) document.title = plan.title;
+
+  // Masthead: what this is and where it stands.
+  var head = el("header", "masthead");
+  head.appendChild(el("span", "eyebrow", "Flight plan" + (updated ? " \u00b7 Updated " + fmtDate(updated) : "")));
+  head.appendChild(el("h1", null, plan.title || plan.slug || "Plan"));
+  if (plan.outcome) head.appendChild(el("p", "outcome", plan.outcome));
+  var route = el("div", "route");
+  var ol = el("ol");
+  ol.setAttribute("aria-label", "Progress, one mark per step");
+  tickets.forEach(function (t) {
+    var st = stateOf(t);
+    var li = el("li", st);
+    var dot = el("span", "wp " + st);
+    dot.title = t.id + " \u00b7 " + (t.title || "") + " \u00b7 " + (STATUS[st] || st);
+    dot.setAttribute("role", "img");
+    dot.setAttribute("aria-label", dot.title);
+    li.appendChild(dot);
+    ol.appendChild(li);
+  });
+  route.appendChild(ol);
+  var tally = el("div", "tally");
+  function tallyItem(n, text) { var s = el("span"); var b = el("b", null, String(n)); s.appendChild(b); s.appendChild(document.createTextNode(" " + text)); return s; }
+  tally.appendChild(tallyItem(counts.done, "of " + tickets.length + " steps done"));
+  if (counts.stale) tally.appendChild(tallyItem(counts.stale, counts.stale === 1 ? "needs a new plan" : "need a new plan"));
+  if (counts.failed) tally.appendChild(tallyItem(counts.failed, "didn't pass"));
+  if (closed) tally.appendChild(el("span", null, "Plan complete"));
+  route.appendChild(tally);
+  head.appendChild(route);
+  app.appendChild(head);
+
+  // Now: the one thing to do next.
+  var nowSec = el("section");
+  nowSec.appendChild(el("h2", null, closed ? "Finished" : "What happens now"));
+  var now = el("div", "now");
+  if (closed) {
+    now.classList.add("closed");
+    now.appendChild(el("h3", null, "The plan is complete"));
+    if (closed.summary) now.appendChild(el("p", null, closed.summary));
+  } else if (live) {
+    var nh = el("div", "now-head");
+    nh.appendChild(el("span", "id", live.id));
+    nh.appendChild(el("h3", null, live.title || live.id));
+    nh.appendChild(pill("live"));
+    now.appendChild(nh);
+    if (live.why) now.appendChild(el("p", null, live.why));
+    var facts = el("dl", "facts");
+    function fact(k, v) { if (!v) return; facts.appendChild(el("dt", null, k)); facts.appendChild(el("dd", null, v)); }
+    fact("Done when", live.done);
+    fact("Runs on", runsOn(live));
+    if (live.tool) fact("Uses", live.tool);
+    if (live.guards && live.guards.length) fact("Guardrails", live.guards.join(" \u00b7 "));
+    now.appendChild(facts);
+    var steps = el("ol", "steps");
+    var s1 = el("li");
+    s1.appendChild(document.createTextNode("Copy the prompt below."));
+    steps.appendChild(s1);
+    if (live.where !== "subagent" && live.model) {
+      var s2 = el("li");
+      s2.appendChild(document.createTextNode("If Claude isn't already on " + (live.model.charAt(0).toUpperCase() + live.model.slice(1)) + ", send "));
+      s2.appendChild(el("span", "cmd", "/model " + live.model));
+      if (live.effort && live.model !== "haiku") { s2.appendChild(document.createTextNode(" then ")); s2.appendChild(el("span", "cmd", "/effort " + live.effort)); }
+      s2.appendChild(document.createTextNode(" first."));
+      steps.appendChild(s2);
+    }
+    var s3 = el("li");
+    s3.appendChild(document.createTextNode("Paste it into the same Claude conversation. When the step is done, Claude updates this page."));
+    steps.appendChild(s3);
+    now.appendChild(steps);
+    var text = prompts[live.id];
+    if (text) {
+      var box = el("div", "prompt-box");
+      var bar = el("div", "prompt-bar");
+      bar.appendChild(el("span", "label", "Prompt for " + live.id));
+      var btn = el("button", "copy", "Copy prompt");
+      btn.type = "button";
+      var pre = el("pre", "prompt", text);
+      pre.id = "live-prompt";
+      btn.addEventListener("click", function () {
+        function done() { btn.textContent = "Copied"; btn.classList.add("ok"); setTimeout(function () { btn.textContent = "Copy prompt"; btn.classList.remove("ok"); }, 1800); }
+        function select() { var r = document.createRange(); r.selectNodeContents(pre); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); btn.textContent = "Selected \u2014 press Ctrl+C or \u2318C"; }
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, select);
+          else select();
+        } catch (e) { select(); }
+      });
+      bar.appendChild(btn);
+      box.appendChild(bar);
+      box.appendChild(pre);
+      now.appendChild(box);
+    } else {
+      now.appendChild(el("p", null, "This step's prompt isn't on the page yet. Run /flightplan and Claude will write it."));
+    }
+  } else if (firstStale) {
+    now.classList.add("paused");
+    now.appendChild(el("h3", null, "Paused: " + firstStale.id + " needs a new plan"));
+    now.appendChild(el("p", null, "An earlier step turned up something that changes the plan from here on. Run /flightplan and Claude will re-plan the affected steps with you before anything else runs."));
+  } else if (nextPending) {
+    now.appendChild(el("h3", null, "Between steps"));
+    now.appendChild(el("p", null, "Next up is " + nextPending.id + ": " + (nextPending.title || "") + ". Run /flightplan and Claude will write its prompt."));
+  } else {
+    now.appendChild(el("h3", null, "Every step has run"));
+    now.appendChild(el("p", null, "Run /flightplan to close the plan with a summary of what it produced."));
+  }
+  nowSec.appendChild(now);
+  app.appendChild(nowSec);
+
+  // The plan: every step, what it is for, and what came out of it.
+  var planSec = el("section");
+  planSec.appendChild(el("h2", null, "The plan, step by step"));
+  planSec.appendChild(el("p", "section-note", tickets.length + " steps, in the order they have to happen. Open any step for its details."));
+  var strips = el("ol", "strips");
+  tickets.forEach(function (t) {
+    var st = stateOf(t);
+    var rec = status[t.id] || {};
+    var li = el("li");
+    var d = el("details", "strip " + st);
+    var sm = el("summary");
+    sm.appendChild(el("span", "id", t.id));
+    sm.appendChild(el("span", "title", t.title || t.id));
+    sm.appendChild(pill(st));
+    if (t.why) sm.appendChild(el("span", "why", t.why));
+    if (rec.result) {
+      var r = el("span", "result");
+      r.appendChild(el("span", "label", st === "failed" ? "Didn't pass" : st === "stale" ? "Why it changed" : "Result"));
+      r.appendChild(document.createTextNode(rec.result));
+      sm.appendChild(r);
+    }
+    var more = el("span", "more");
+    more.appendChild(el("span", "show", "Details \u25b8"));
+    more.appendChild(el("span", "hide", "Hide details \u25be"));
+    sm.appendChild(more);
+    d.appendChild(sm);
+
+    var det = el("div", "detail");
+    var f = el("dl", "facts");
+    function row(k, v) { if (!v) return null; f.appendChild(el("dt", null, k)); var dd = el("dd", null, v); f.appendChild(dd); return dd; }
+    row("Done when", t.done);
+    if (rec.evidence) {
+      f.appendChild(el("dt", null, "Evidence"));
+      var dd = el("dd");
+      if (isUrl(rec.evidence)) { var a = el("a", null, rec.evidence); a.href = rec.evidence; a.target = "_blank"; a.rel = "noopener"; dd.appendChild(a); }
+      else dd.appendChild(el("code", null, rec.evidence));
+      f.appendChild(dd);
+    }
+    row("Uses", t.tool ? t.tool + (t.beat ? " (chosen over " + t.beat + ")" : "") : "No special tool needed");
+    row("Runs on", runsOn(t));
+    var hist = (history[t.id] || []).filter(function (h) { return h.at; });
+    if (hist.length) row("Timeline", hist.map(function (h) { return (STATUS[h.status] || h.status) + " " + fmtDate(h.at); }).join(" \u2192 "));
+    det.appendChild(f);
+    if (t.guards && t.guards.length) {
+      var chips = el("div", "chips");
+      t.guards.forEach(function (g) { chips.appendChild(el("span", "chip", g)); });
+      det.appendChild(chips);
+    }
+    if (prompts[t.id] && st !== "live") {
+      var inner = el("details", "inner");
+      inner.appendChild(el("summary", null, "The prompt this step ran"));
+      inner.appendChild(el("pre", null, prompts[t.id]));
+      det.appendChild(inner);
+    }
+    d.appendChild(det);
+    li.appendChild(d);
+    strips.appendChild(li);
+  });
+  planSec.appendChild(strips);
+  app.appendChild(planSec);
+
+  // Background: what the plan is based on, and where each fact came from.
+  var bg = el("section");
+  bg.appendChild(el("h2", null, "What this plan is based on"));
+  if (plan.approach) bg.appendChild(el("p", "approach", plan.approach));
+  var cl = el("ul", "context");
+  context.forEach(function (c) {
+    var li = el("li");
+    li.appendChild(el("span", "field", c.field));
+    var unset = !c.value || /^not established$/i.test(c.value);
+    li.appendChild(el("span", "value" + (unset ? " unset" : ""), unset ? "Not established yet" : c.value));
+    if (c.source) li.appendChild(el("span", "source", "Source: " + c.source));
+    cl.appendChild(li);
+  });
+  bg.appendChild(cl);
+  if (flags.length) {
+    var fl = el("div", "flags");
+    fl.appendChild(el("span", "label", "Worth knowing"));
+    flags.forEach(function (x) { fl.appendChild(el("span", null, x.text)); });
+    bg.appendChild(fl);
+  }
+  app.appendChild(bg);
+
+  // How the page works, for anyone reading it cold.
+  var how = el("footer", "how");
+  var h1c = el("div");
+  h1c.appendChild(el("h2", null, "How this page works"));
+  h1c.appendChild(el("p", null, "Claude split the work into small steps, each with a clear pass-or-fail check. One step runs at a time: its prompt is copied into Claude, Claude does the step, and records the result here. Nothing runs without someone pasting it."));
+  how.appendChild(h1c);
+  var h2c = el("div");
+  h2c.appendChild(el("h2", null, "Words on this page"));
+  var gl = el("dl");
+  [["Step", "one small piece of the work with a clear check."],
+   ["Uses", "a specialised skill or tool Claude loads for that step."],
+   ["Model", "which Claude does the step: Haiku is fastest and cheapest, Sonnet handles everyday work, Opus handles complex work, Fable takes the hardest problems."],
+   ["Effort", "how long Claude thinks before acting. Higher is slower and costs more."]
+  ].forEach(function (p) { var w2 = el("div"); w2.appendChild(el("dt", null, p[0] + ":")); w2.appendChild(document.createTextNode(" ")); w2.appendChild(el("dd", null, p[1])); gl.appendChild(w2); });
+  h2c.appendChild(gl);
+  how.appendChild(h2c);
+  var meta = el("p", "meta");
+  meta.textContent = [plan.project ? "Project " + plan.project : "", plan.slug ? "Plan " + plan.slug : "", plan.created ? "Started " + fmtDate(plan.created) : ""].filter(Boolean).join(" \u00b7 ");
+  how.appendChild(meta);
+  app.appendChild(how);
+})();
+</script>

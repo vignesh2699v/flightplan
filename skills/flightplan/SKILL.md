@@ -1,154 +1,101 @@
 ---
 name: flightplan
-description: Read a project, test the premise, then file one plan holding its context, its tickets and a live tracker — and hand over one ticket at a time with the best-fit installed skill, subagent or MCP tool attached to each. Use when the user runs /flightplan, or asks to plan, scope, kick off or set up a piece of work. Returns prompts for the user to paste back into this same conversation and run themselves; never executes the work.
+description: Plans a piece of work before it starts and hands it over one checkable ticket at a time. Reads the project, tests the premise with at most four questions, then files a live plan page anyone can follow; each ticket gets the best installed skill, subagent or MCP tool and a prompt written for the model and effort it should run on. Use when the user runs /flightplan, asks to plan, scope, kick off, break down or sequence work, or wants to resume a plan, even without saying plan. A single small ask gets one routed line instead. Never does the work itself.
+license: MIT
+compatibility: Built for Claude Code. Uses the Skill, Agent, AskUserQuestion and Artifact tools when present, and falls back to plain text and a local HTML page when they are not.
+metadata:
+  version: "3.0"
 ---
 
 # Flightplan
 
-Read a project, file a plan, serve one ticket at a time. Deliver the ticket,
-then stop — the user pastes it back into this same conversation and runs it.
+Plan the work, then hand it over one ticket at a time. The user approves the plan once; after that each ticket is a prompt they paste back into this conversation, and when it finishes, that session logs the outcome on the plan page. You plan, route and write prompts, and never do a ticket's work yourself: the pause between tickets is where the user checks the result and, when it pays, changes model.
 
-Rationale for every rule below lives in `docs/design-notes.md`. Templates,
-exact strings and page anatomy live in `reference/mechanics.md`. Do not
-restate either here — if you're about to explain *why*, it belongs in one of
-those two files, not a third copy in this one.
+Read the files beside this one only at the step that names them. The small-ask path needs none.
 
-## Pipeline
+## Pick the path
 
-### 0. Size the ask
+First check for an open plan: search `~/.claude/flightplan/jobs/` for this project's key, which is its git remote without protocol or `.git` (`github.com/acme/shop`), or its path when there is no remote. A matching file is open unless it has a `"kind":"close"` line.
 
-| The ask | Path |
+| Situation | Path |
 |---|---|
-| One verifiable outcome, no plan open | One-liner (`mechanics.md` § One-liner), then stop |
-| One verifiable outcome, plan already open (`mechanics.md` § The plan page — recover it before deciding) | One new ticket on that plan, then stop |
-| Anything larger | Steps 1–6 below |
+| `/flightplan record T-NN`, after a ticket ran | § Record |
+| `/flightplan` with nothing new to plan | § Resume |
+| The ask names no target ("fix the bug") | Ask which one, offering the candidates a quick read turns up, then pick the path |
+| Plan open, ask is one checkable outcome | Add it as the plan's next ticket (§ Plan), then § Serve |
+| Plan open, ask is bigger | Ask whether to extend that plan or start a separate one |
+| No plan open, ask is one checkable outcome | § One-liner, then stop |
+| Anything else | § Read, § Grill, § Plan, § Approve, § Serve |
 
-Never run steps 1–6 on a single-outcome ask. A direct answer beats a filed
-plan there, which is measured rather than assumed.
+A single checkable outcome never gets a page; the evals showed a routed line beats a filed plan there.
 
-### 1. Read
+## One-liner
 
-Establish the five context fields (`mechanics.md` § Context fields) from
-memory, git log, README, CLAUDE.md, package manifests and the files
-themselves. Record where each one came from.
+One fenced block, so it copies cleanly, then a line of why:
 
-Infer rather than ask. A question you could have answered by reading is the
-failure this step exists to prevent.
+```text
+Use /<skill-or-agent>[ on <model> at <effort> effort]. <Instruction, folding in the requirement and why it matters.> <Hard constraint, only when one applies.> Done = <criterion>. Tell me pass or fail.
+```
 
-If a plan already exists for this project, read it instead of starting
-over — see § 5.
+**Why:** <the pick, and its runner-up if the choice was close.>
 
-### 2. Grill
+Pick the capability from the session's listing by what its description says it does, and drop "Use /…" when nothing fits. Name a model only when the ask needs a stronger one than the session's (§ Models). Nothing is recorded afterwards; a one-liner has no page.
 
-Run `grilling` on the premise, now that reading has given it something to
-push against. If `grilling` isn't installed, grill inline.
+## Read
 
-Four questions maximum, in one round, on gaps only — never on anything
-reading already settled. Zero questions is the correct outcome when reading
-covered everything; say so in a line rather than manufacturing one.
+Establish five context fields: what this is, who it's for, what exists now, what success looks like, what's out of scope. Take them from memory, the git log, README, CLAUDE.md or AGENTS.md, the manifest, the code, and a connected issue tracker when the ask points at an issue, issuing these independent reads together in one turn. Note each field's source, so a wrong inference is caught in seconds. Infer rather than ask: a question reading could have answered is the failure this step exists to prevent.
 
-Spend questions on "what success looks like" and "what's out of scope"
-first: those are the two fields reading rarely settles.
+## Grill
 
-Carry the answer to the costliest-assumption question into step 5 — it
-decides which ticket, if any, escalates past the default effort.
+Test the premise against what reading found, with the `grilling` skill if it's installed, otherwise inline. At most four questions, in one round of AskUserQuestion where available, only on gaps reading couldn't close; offer the likely answers reading turned up as options, and spend the questions first on success and scope, which reading rarely settles. When reading covered everything, ask nothing and say so. Never plan work around a guessed target: when the target is unclear, asking is the step. Note which assumption is costliest to get wrong: it decides which ticket, if any, gets more effort.
 
-### 3. File the plan
+## Plan
 
-Publish one page per project (`mechanics.md` § The plan page): context with
-its source trail, the outcome, the approach, and the ticket list.
+Split the work into tickets, each one checkable outcome, in dependency order; a real project lands at 5 to 15. Anything destructive, outward-facing or irreversible gets its own ticket that says so, since size alone doesn't isolate it. Per ticket, settle:
 
-Split the work into tickets, each **one verifiable outcome** — the smallest
-thing that can be reported pass or fail. Order by dependency. A real project
-lands at 8–15.
+- **Capability**: at most one skill, subagent or MCP tool, chosen per `references/routing.md`; "none needed" is valid, and a second one needs a stated reason.
+- **Model and effort**: § Models.
+- **Where it runs**: this session by default, since it holds the context; a subagent when the ticket is self-contained and suits a smaller model, or is verification-shaped.
+- **Done =**: reportable as pass or fail.
 
-Any destructive, outward-facing or irreversible step gets its own ticket and
-says so in its own body. Ticket size alone does not isolate it.
+Create the page (`references/plan-page.md` § Create) and give the user its link with one line: the outcome, the ticket count, and how many picks are contested.
 
-Classify each ticket's capability:
+## Approve
 
-| Class | Meaning |
-|---|---|
-| Uncontested | One candidate; no runner-up seriously threatens it |
-| Contested | 2+ real candidates in genuine competition |
-| None needed | Nothing fits, or the work is more direct without one |
+Put the contested picks to the user in one round of AskUserQuestion, top pick marked "(Recommended)". A call holds four questions, so a fifth contested pick takes a second call; that's the tool's limit, not a judgement. Uncontested picks aren't asked about; the page shows each pick and what it beat. Without AskUserQuestion, list numbered options with the default marked. Until the user says go, change the page in place.
 
-At most one capability per ticket. Add a second only where the ticket
-genuinely spans two domains, and say why both. "None needed" is always a
-valid answer.
+## Serve
 
-### 4. Ballot
+Write the live ticket's prompt now, against what the earlier tickets actually produced; a prompt written ahead encodes assumptions the earlier work may disprove. Follow `references/tickets.md`. Append the ticket's `live` status and prompt to the page (`references/plan-page.md` § Update) and republish.
 
-One round, at approval, covering every contested ticket — top pick marked
-"(Recommended)", max 4 per AskUserQuestion call. More than four contested
-tickets take a second call; four is the tool's limit, not a decision that
-the fifth doesn't matter.
+Then tell the user in two lines at most which ticket is live and where to copy it, plus any switch as `/model <alias>` and `/effort <level>`, each sent on its own before pasting. The prompt stays on the page, not in chat, unless there's no page viewer (`references/plan-page.md` § Without the Artifact tool). Then stop. A `stale` ticket is never served as written; re-plan it with the user first.
 
-Uncontested and none-needed tickets are never asked about. Their pick and
-nearest runner-up are stated on the page instead.
+## Record
 
-Before ranking, read `~/.claude/rebuild-prompt/history.md` once, covering
-every contested ticket this run. Schema and write rules in `mechanics.md`.
+Runs in the session that just did a ticket. Append its status (`done`, or `failed` when the done-criterion wasn't met), one plain sentence on what came out of it, and the evidence's link or path (`references/plan-page.md` § Update). If the work went off-plan, say so there and mark each later ticket `stale` without rewriting it; an approved plan changes only when the user is asked. Tell the user pass or fail, then § Serve the next ticket in the same turn, or after the last one, close the plan with one sentence on what it produced.
 
-Done when every ticket has a capability — chosen, waived or absent — and the
-user has approved the plan.
+## Resume
 
-### 5. Serve one ticket
+Find the plan (`references/plan-page.md` § Find the plan) and say in one line where it stands. In a new session, re-read what the finished tickets touched first, since it may have changed. Then serve the first ticket not done, or re-plan it with the user if it's stale.
 
-Write the live ticket's full prompt now, against what the tickets before it
-actually produced. Never pre-write a later ticket: it would encode
-assumptions the earlier work may disprove.
+## Models
 
-Mark the ticket `live` on the page and publish its prompt into the page's
-live-prompt block (`mechanics.md` § The plan page). In chat, give the URL
-and one line naming which ticket is live — never a second copy of the
-prompt.
+Name models by alias (`haiku`, `sonnet`, `opus`, `fable`) so tags outlive releases, and read what's available from the session, the Agent tool's `model` options and the `/model` aliases, rather than asking.
 
-Resuming a project: read its page and continue from the first ticket marked
-`pending`. Re-read the project first, since anything may have changed. Say
-in one line what the tracker held and what you re-read. A `stale` ticket is
-never served as-is — its instructions were invalidated by a finding, so
-re-plan it with the user before it goes live.
+| Ticket | Smallest model that fits | Effort |
+|---|---|---|
+| Mechanical and fully specified: rename, move, reformat, bump | `haiku` | none; Haiku has no effort setting |
+| Everyday build, fix or test with a clear spec | `sonnet` | `high`, or `medium` when routine |
+| Multi-file change, unknown cause, design judgement, review | `opus` | `medium`; `high` on the costliest-assumption ticket |
+| Hardest, longest, most ambiguous: architecture, security, money | `fable` if available, else `opus` | `high`; `xhigh` or `max` only when correctness outweighs cost |
 
-### 6. Write back
-
-Every ticket prompt ends with the writeback line (`mechanics.md` §
-Writeback). The session that runs the ticket updates the page itself:
-status, one line of outcome, a link to the evidence.
-
-When a ticket reports going off-plan, update the record immediately and mark
-the tickets after it stale. Do not rewrite them — a plan the user approved
-changes only when the user is asked.
-
-Done when the last ticket is `done` and the page says the plan is closed.
-
-## Writing a ticket
-
-- One sentence of intent, up front.
-- Name the capability as an instruction, not decoration — `mechanics.md`
-  § Self-invocation.
-- Tag it `[model: <id> | effort: <level>]` — ladder and defaults in
-  `mechanics.md`.
-- Hard constraints, destructive-action guards and credential boundaries are
-  never dropped for brevity — one line each, in the ticket they apply to.
-- One paragraph, one unbroken line. Never hard-wrap a prompt body.
-- No context preamble: the page holds the context, and the user is pasting
-  into the conversation that already has it.
-- Route against the live session listing, exact registered names. Flag auth,
-  disconnection and setup preconditions.
-- State the behaviour wanted, not the behaviour forbidden.
-- A done-criterion is mandatory, phrased so the writeback can report it pass
-  or fail.
+Changing model or effort mid-session resets the prompt cache, and the next turn re-reads the whole conversation at full price. So run a ticket on the session's own model whenever it is at least the one the table names (the order is `haiku`, `sonnet`, `opus`, `fable`), switch up only when the ticket needs more, and go smaller only through a subagent, which binds its own model without touching this session. A pure clarification runs at `low`. Raise effort one rung at a time, only for what the ticket itself costs to get wrong.
 
 ## Standing rules
 
-Applied every run, never asked about. Use the fallback for any missing
-capability — skill, subagent or MCP tool — and flag the substitution. Never
-silently drop a pipeline step.
+Applied to every ticket, never asked about; a one-liner carries only its own constraint. When a capability a step relies on is missing, use the fallback and name the substitution; never drop a step silently.
 
-- Code-writing tickets get one fresh-context review appended — fallback
-  chain in `mechanics.md`. No self-checking language in the ticket body.
-- Plan- or spec-producing tickets render as a commentable HTML artifact at
-  their own URL, separate from the plan page.
-- Every agent-dispatched ticket carries the reporting contract from
-  `mechanics.md` § Agent tickets report as they go.
+- A code-writing ticket on `haiku` or `sonnet`, or touching payments, auth, data migration or security, ends with one fresh-context review (`references/tickets.md` § Review). Other `opus` and `fable` tickets rely on the model's own checking; asking for more only inflates it.
+- A ticket that produces a plan or spec publishes it as a commentable page at its own URL (`references/tickets.md` § Plan deliverables).
+- A ticket that dispatches an agent carries the reporting contract (`references/tickets.md` § Agent tickets).
+- Name only capabilities present in this session, by their exact registered names.

@@ -1,105 +1,126 @@
 # flightplan
 
-A [Claude Code](https://claude.com/claude-code) skill that reads a project,
-files one plan holding its context, its tickets and a live tracker, then
-hands over one ticket at a time with the right skill, agent, model and
-effort attached to each.
+[![skills.sh](https://skills.sh/b/vignesh2699v/flightplan)](https://skills.sh/vignesh2699v/flightplan)
 
-It does **not** run the work. It hands you prompts you paste back into the
-same conversation, one at a time — and each ticket updates the plan when
-it's done, so the tracker fills itself in.
+A [Claude Code](https://claude.com/claude-code) skill that plans a piece of
+work before it starts, then hands it over one checkable ticket at a time. Each
+ticket comes with the right installed skill, the right model and effort, and a
+prompt written for the model that will run it. Progress lives on a plan page
+anyone can follow.
 
-## The problem
+It never does the work itself. You approve the plan once, paste each ticket
+into the same conversation, and the session that runs it records the result
+on the page and serves the next one.
 
-You have hundreds of skills, agents and MCP tools installed. Picking the
-right one per task is real work, and you mostly don't do it — so most tasks
-run on nothing, or on whatever you happened to remember.
-
-Then the work itself scatters. Plans end up in `.md` files across a dozen
-folders, progress lives in your head, and halfway through a session you're
-pushing changes without a clear picture of what's done, what's left, or
-whether the plan still matches what you found. There's no process — just
-momentum.
-
-flightplan gives the session a spine. One page per project: what this is,
-what done looks like, the tickets in order, and a tracker that updates
-itself as each one finishes. You approve the plan once, then work one ticket
-at a time and glance at the tracker.
+![A flightplan plan page: where the plan stands, what happens now, and every step with what it is for and what came out of it](docs/images/plan-page.png)
 
 ## Install
 
 ```bash
-git clone https://github.com/vignesh2699v/claude-flightplan.git
+npx skills add vignesh2699v/flightplan -a claude-code
 ```
+
+Add `-g` to install it for every project instead of just this one, then start
+a new Claude Code session. `/flightplan` is ready.
+
+To install by hand instead:
 
 ```bash
-cp -r claude-flightplan/skills/flightplan ~/.claude/skills/
+git clone https://github.com/vignesh2699v/flightplan.git
+cp -r flightplan/skills/flightplan ~/.claude/skills/
 ```
 
-Verify — you should see `SKILL.md` and `reference/`:
-
-```bash
-ls ~/.claude/skills/flightplan
-```
-
-Start a new session and `/flightplan` is available.
-
-**Requirements:** Claude Code, and nothing else. No `npm install`, no
-`pip install`, no runtime dependencies. It routes against whatever skills,
-agents and MCP tools you already have, and never invents a capability
-name — with nothing installed it still produces a well-structured plan, just
-with fewer skills attached.
-
-**No other skill is a hard dependency**, including `grilling` — that one is
-from [mattpocock/skills](https://github.com/mattpocock/skills):
-
-```bash
-npx -y skills add mattpocock/skills --skill grilling --agent claude-code
-```
-
-Without it, the premise gets grilled inline instead. Every substitution and
-every skipped step is named in the output, because a fallback you weren't
-told about is indistinguishable from the feature working.
-
-## Usage
+## Use it
 
 Run it on whatever you're about to start:
 
 ```
-/flightplan redo the onboarding flow — it's losing people at signup
+/flightplan redo the onboarding flow, it's losing people at signup
 ```
 
-**What happens.** It reads the project first — memory, git log, README,
-existing files — and infers what it can rather than asking. Then it grills
-the premise: at most four questions, only on what reading couldn't settle.
-Often zero.
+1. **It reads the project first:** memory, git history, the README,
+   CLAUDE.md and the code. It infers what it can instead of asking.
+2. **It tests the premise** with at most four questions, only about what
+   reading couldn't settle. Often none.
+3. **It files a plan page** and gives you the link: what this is, what done
+   looks like, and every ticket in order with its tool and model. Contested
+   choices come to you as one round of multiple-choice questions.
+4. **It hands over one ticket at a time.** Copy the prompt from the page and
+   paste it into the same conversation. When the ticket is done, that session
+   records the outcome on the page and serves the next ticket.
 
-Then it files a plan page and gives you the link. You approve it once. That
-page holds:
+Come back tomorrow and run `/flightplan` again: it finds the plan and picks up
+where it stopped.
 
-- **Context** — what this is, who it's for, what exists now, what success
-  looks like, what's out of scope, each line naming where it came from
-- **Tickets** — one verifiable outcome each, in dependency order, with the
-  capability chosen for each and what it beat
-- **Tracker** — status, one line of outcome, evidence link, per ticket
+**Small asks skip all of it.** One checkable change gets one routed line back,
+with no page and no questions:
 
-After that you get one ticket at a time. Paste it, run it, and that session
-updates the tracker itself — you never carry results back by hand. When you
-return, next hour or next week, run `/flightplan` again on the same project:
-it finds the page, reads the tracker, and picks up at the first unfinished
-ticket.
+```
+/flightplan add a loading spinner to the Pay now button while payment is in flight
+```
 
-**Small asks skip all of it.** One thing to do gets one line back with the
-right skill attached — no plan page, no context phase. If a plan is already
-open, it becomes a ticket on that plan instead, so the tracker stays a true
-record of the session.
+## What it does differently
+
+- **Prompts written for the model that runs them.** Haiku gets exact files
+  and a before-and-after example. Sonnet gets its scope stated outright,
+  because it follows instructions literally. Opus gets the goal and the
+  constraints and chooses the method. Fable gets the full reason and the
+  boundaries, never a step-by-step script, which Anthropic's guidance says
+  makes its work worse.
+- **Model and effort per ticket, without wasting your cache.** Each ticket
+  names the smallest model that fits. It stays on your current model when
+  that's enough, because switching model mid-session makes the next turn
+  re-read the whole conversation at full price. Cheaper, self-contained work
+  goes to a helper agent on a smaller model instead.
+- **The right capability per ticket.** It routes against the skills,
+  subagents and MCP tools you actually have installed, tells you how many it
+  considered, and asks you only about genuinely contested picks. It
+  remembers what you chose for similar work.
+- **A page anyone can follow.** Every step says what it's for and what came
+  out of it in plain words. Status is a word as well as a colour, and the
+  page works in light and dark mode and on a phone.
+
+## What it writes, and where
+
+| Path | What |
+|---|---|
+| `~/.claude/flightplan/jobs/<plan>.html` | The plan page, one file per plan |
+| `~/.claude/flightplan/history.md` | Which capability you picked for which kind of task: task shape only, never your prompts |
+
+The plan page is published to your own claude.ai account with Claude Code's
+Artifact tool, and stays private until you share it. It holds every ticket's
+prompt word for word, so share it with that in mind. Nothing else leaves your
+machine. Where the Artifact tool isn't available, the local HTML file is the
+page and each prompt also appears in chat.
+
+## Compatibility
+
+Built for Claude Code. It uses the Skill, Agent, AskUserQuestion and Artifact
+tools when they're present and falls back to plain text and a local page when
+they're not. No other skill is required. If
+[`grilling`](https://github.com/mattpocock/skills) is installed, flightplan
+uses it for the premise check:
+
+```bash
+npx skills add mattpocock/skills --skill grilling -a claude-code
+```
+
+## Development
+
+```bash
+python3 scripts/check-skill.py        # frontmatter, size, hidden characters, file pointers, template anchors
+python3 scripts/lint-duplication.py   # each rule stated in exactly one place
+```
+
+Both run before every release. Evaluations live in [`eval/`](eval/); the latest
+compares this release with the one before it on the same fixture project.
 
 ## More
 
-- [Design notes](docs/design-notes.md) — the durable decisions, and why
-- [Spec](docs/flightplan-spec.html) — the v2 design, settled by grilling
-- [CHANGELOG.md](CHANGELOG.md) — what changed release to release
+- [Design notes](docs/design-notes.md): the durable decisions, and why
+- [CHANGELOG.md](CHANGELOG.md): what changed release to release
+- [v2 design spec](docs/flightplan-spec.html): the design that v3 builds on
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

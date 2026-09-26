@@ -1,6 +1,6 @@
 # Changelog
 
-This file mirrors the [GitHub releases](https://github.com/vignesh2699v/claude-flightplan/releases) for this repo. Every future release is appended here as well as published there.
+This file mirrors the [GitHub releases](https://github.com/vignesh2699v/flightplan/releases) for this repo. Every future release is appended here as well as published there.
 
 ## v2.1 — accordion tickets, outcomes behind an overlay
 

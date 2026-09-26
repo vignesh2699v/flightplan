@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Fail when a rule is stated in more than one place.
 
-Three files describe one system, and each owns a different job:
+Several files describe one system, and each owns a different job:
 
-    skills/flightplan/SKILL.md                   imperative pipeline steps
-    skills/flightplan/reference/mechanics.md     mechanics, strings, templates
+    skills/flightplan/SKILL.md                   the paths and pipeline steps
+    skills/flightplan/references/*.md            mechanics, strings, templates
     docs/design-notes.md                         rationale
 
 Any rule written into two of them will drift apart, and this one has three
@@ -43,7 +43,10 @@ REPO = Path(__file__).resolve().parents[1]
 
 SOURCES = (
     "skills/flightplan/SKILL.md",
-    "skills/flightplan/reference/mechanics.md",
+    *sorted(
+        str(path.relative_to(REPO))
+        for path in (REPO / "skills/flightplan/references").glob("*.md")
+    ),
     "docs/design-notes.md",
 )
 
@@ -54,7 +57,7 @@ DEFAULT_SHINGLE = 8
 # paragraph, heading, fence and pointer boundaries stay un-crossable.
 BARRIER = "\x00"
 
-POINTER = re.compile(r"mechanics\.md|SKILL\.md|design-notes\.md|§")
+POINTER = re.compile(r"references/|SKILL\.md|design-notes\.md|§")
 HEADING = re.compile(r"^\s{0,3}#{1,6}\s")
 LINK = re.compile(r"\[([^\]]*)\]\([^)]*\)")
 MARKUP = re.compile(r"[`*_>|#\[\]()]+")
