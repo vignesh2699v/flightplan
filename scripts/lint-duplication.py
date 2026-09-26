@@ -18,8 +18,10 @@ the bug:
 
   fenced code blocks      a template and an example of it filled in are
                           supposed to match; that is not drift
-  cross-reference lines   a line naming another file, or a section with a
-                          section mark, is a pointer -- pointers are the fix
+  cross-references        a file name or a section mark, with the section it
+                          names, is a pointer -- pointers are the fix, so
+                          that span is skipped and the rest of its line
+                          is still checked
   paragraph and heading   spans never merge across a blank line or a
   boundaries              heading, so unrelated neighbours can't collide
 
@@ -58,6 +60,12 @@ DEFAULT_SHINGLE = 8
 BARRIER = "\x00"
 
 POINTER = re.compile(r"references/|SKILL\.md|design-notes\.md|§")
+# The pointer itself: a file name, optionally with the section it names.
+# Only this span is exempt; the rest of the line is still checked, because a
+# skill paragraph is one long line and exempting all of it hid real copies.
+POINTER_SPAN = re.compile(
+    r"`?(?:references/[\w.-]+|SKILL\.md|design-notes\.md)`?(?:\s*§\s*[^,.;:()`]+)?|§\s*[^,.;:()`]+"
+)
 HEADING = re.compile(r"^\s{0,3}#{1,6}\s")
 LINK = re.compile(r"\[([^\]]*)\]\([^)]*\)")
 MARKUP = re.compile(r"[`*_>|#\[\]()]+")
@@ -85,8 +93,13 @@ def tokenize(path: Path) -> list[tuple[str, int]]:
         if raw.lstrip().startswith("```"):
             in_fence = not in_fence
             words.append((BARRIER, lineno))
-        elif in_fence or not raw.strip() or POINTER.search(raw):
+        elif in_fence or not raw.strip():
             words.append((BARRIER, lineno))
+        elif POINTER.search(raw):
+            for number, piece in enumerate(POINTER_SPAN.split(raw)):
+                if number:
+                    words.append((BARRIER, lineno))
+                words.extend((token, lineno) for token in normalize(piece))
         elif HEADING.search(raw):
             words.append((BARRIER, lineno))
             words.extend((token, lineno) for token in normalize(raw))
@@ -250,7 +263,7 @@ def report(findings: list[dict], size: int) -> None:
 
     print(
         "State each rule once, in the file that owns it, and point at it from\n"
-        "the others -- a line naming another file is exempt. Repetition that\n"
+        "the others -- the pointer itself is exempt. Repetition that\n"
         f"is genuinely intended goes in {ALLOWLIST}, with a reason."
     )
 

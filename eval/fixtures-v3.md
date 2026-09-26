@@ -8,8 +8,8 @@ shape needs covering rather than rewriting one.
 
 ## The project
 
-Every fixture runs against the same small repository, rebuilt from the script
-in the v3.0 results (`2026-09-26-v3.0-results.md`, § Method): "Acme Shop", a
+Every fixture runs against the same small repository, rebuilt with
+`bash eval/build-fixture.sh <new-dir>`: "Acme Shop", a
 Next.js storefront with a six-step signup flow, a payments path that
 CLAUDE.md says needs a second reviewer, 40 legacy CSS class names mid-way
 through a BEM migration, one global store with no tenant concept, a

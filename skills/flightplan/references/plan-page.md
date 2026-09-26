@@ -8,7 +8,7 @@ A plan is one self-contained HTML file copied from `assets/plan-page.html` in th
 
 ## Find the plan
 
-1. Search `~/.claude/flightplan/jobs/` for the project key in `"kind":"plan"` lines: the git remote without protocol, credentials or `.git` (`github.com/acme/shop`), else the absolute project path. It's open until the file has a `"kind":"close"` line.
+1. Search `~/.claude/flightplan/jobs/` for the project key (SKILL.md § Pick the path) in `"kind":"plan"` lines. A plan is open until its file has a `"kind":"close"` line.
 2. No local file, as on a new machine or a fresh cloud container: list artifacts with the Artifact tool, match the plan's title, read the match and save it to the local path.
 3. Still nothing: say so, and ask whether the user has the plan's link rather than assuming there never was one.
 
@@ -31,7 +31,7 @@ The Artifact tool requires a session to read a page before its first republish. 
 
 ## Data lines
 
-One JSON object per line. Strings stay on one line; escape `"` as `\"` and write `</` as `<\/`.
+One JSON object per line. Strings stay on one line; escape `"` as `\"`, and write every `<` as `\u003c` so no string can end the block early.
 
 ```text
 {"kind":"plan","slug":"onboarding-redesign","title":"Onboarding Redesign","project":"github.com/acme/shop","outcome":"…","approach":"…","created":"2026-09-25"}
@@ -45,13 +45,13 @@ One JSON object per line. Strings stay on one line; escape `"` as `\"` and write
 
 - **plan**: `outcome` is one plain sentence on what done looks like; `approach` is two or three.
 - **context**: one line per field from SKILL.md § Read, in order, labelled with a capital first letter ("What this is"). A field reading couldn't settle has the value `not established`.
-- **ticket**: `title` starts with a verb. `why` is one sentence on what the ticket is for, in words someone who has never seen the code would follow. `tool` and `beat` name the pick and the runner-up it beat, with the reason; omit both when nothing is needed. Omit `effort` for `haiku`. `where` is `session` or `subagent`; `guards` lists applicable constraints in a few words each. IDs run `T-01` upward and never change, since records address tickets by ID; a ticket added or re-planned later is a new `ticket` line under its ID.
-- **status**: `pending` until a line says `live`, `done`, `failed`, or `stale` (a finding invalidated it). `result` is one plain sentence on what came out of it; `evidence` is a URL or path.
+- **ticket**: `title` starts with a verb. `why` is one sentence on what the ticket is for, in words someone who has never seen the code would follow. `tool` and `beat` name the pick and the runner-up it beat, with the reason; omit both when nothing is needed. Omit `effort` for `haiku`. `where` is `session` or `subagent`; `guards` lists applicable constraints in a few words each. IDs run `T-01` upward and never change, since records address tickets by ID; a ticket added or re-planned later is a new `ticket` line under its ID, and a re-planned ticket also gets a `pending` status line, since a `stale` status stays until one replaces it.
+- **status**: `pending` until a line says `live`, `done`, `failed`, or `stale` (a finding invalidated it). `result` is the sentence § Record in SKILL.md asks for, and `evidence` is a URL or path.
 - **close**: `summary` is one sentence on what the plan produced.
 
 ## Prompts
 
-Each served prompt is its own block, paragraphs separated by blank lines, with any `</script` inside written as `<\/script`:
+Each served prompt is its own block, paragraphs separated by blank lines. Inside a prompt, write `</` as `<\/` and `<!--` as `<\!--`; either could otherwise end the block early, and the page turns both back when it shows the prompt:
 
 ```html
 <script type="text/plain" data-prompt="T-03">

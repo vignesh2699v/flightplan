@@ -16,7 +16,7 @@ Read the files beside this one only at the step that names them. The small-ask p
 
 ## Pick the path
 
-First check for an open plan: search `~/.claude/flightplan/jobs/` for this project's key, which is its git remote without protocol or `.git` (`github.com/acme/shop`), or its path when there is no remote. A matching file is open unless it has a `"kind":"close"` line.
+First check for an open plan: search `~/.claude/flightplan/jobs/` for this project's key, which is its git remote without protocol, credentials or `.git` (`github.com/acme/shop`), or its path when there is no remote. The key is also what the page records, so a token in the remote never reaches it. A matching file is open unless it has a `"kind":"close"` line.
 
 | Situation | Path |
 |---|---|

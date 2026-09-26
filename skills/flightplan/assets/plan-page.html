@@ -239,7 +239,7 @@
     if (text != null) node.textContent = text;
     return node;
   }
-  function unescapeClose(s) { return String(s).replace(/<\\\//g, "</"); }
+  function unescapeClose(s) { return String(s).replace(/<\\\//g, "</").replace(/<\\!--/g, "<!--"); }
   function fmtDate(s) {
     if (!s) return "";
     var d = new Date(s + (String(s).length === 10 ? "T12:00:00" : ""));
@@ -315,6 +315,7 @@
   var live = null;
   tickets.forEach(function (t) { if (stateOf(t) === "live" && (!live || status[t.id]._seq > status[live.id]._seq)) live = t; });
   var firstStale = tickets.filter(function (t) { return stateOf(t) === "stale"; })[0];
+  var firstFailed = tickets.filter(function (t) { return stateOf(t) === "failed"; })[0];
   var nextPending = tickets.filter(function (t) { return stateOf(t) === "pending"; })[0];
 
   if (plan.title) document.title = plan.title;
@@ -410,6 +411,10 @@
     } else {
       now.appendChild(el("p", null, "This step's prompt isn't on the page yet. Run /flightplan and Claude will write it."));
     }
+  } else if (firstFailed) {
+    now.classList.add("paused");
+    now.appendChild(el("h3", null, "Paused: " + firstFailed.id + " didn't pass its check"));
+    now.appendChild(el("p", null, "Nothing else runs until you decide. Run /flightplan and Claude will ask whether to retry this step, with what the failed run found, or re-plan it."));
   } else if (firstStale) {
     now.classList.add("paused");
     now.appendChild(el("h3", null, "Paused: " + firstStale.id + " needs a new plan"));

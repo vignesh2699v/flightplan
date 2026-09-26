@@ -41,7 +41,6 @@ TEMPLATE_ANCHORS = (
     "</script><!--flightplan:data-->",
     "<!--flightplan:prompts-->",
 )
-TEXT_SUFFIXES = {".md", ".html", ".txt", ".json", ".py", ".js", ".css", ".yaml", ".yml"}
 
 
 def frontmatter(text: str) -> tuple[dict, list[str]]:
@@ -113,16 +112,29 @@ def check_frontmatter(skill: Path, text: str) -> list[str]:
 
 
 def check_characters(skill: Path) -> list[str]:
+    """Scan every text file character by character.
+
+    str.splitlines() would treat several control characters (form feed,
+    U+0085 and others) as line breaks and hide them, so lines are counted by
+    newline only, and every file that decodes as UTF-8 is checked whatever
+    its suffix.
+    """
     problems = []
     for path in sorted(skill.rglob("*")):
-        if not path.is_file() or path.suffix not in TEXT_SUFFIXES:
+        if not path.is_file():
             continue
-        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            for char in line:
-                if char != "\t" and unicodedata.category(char) in {"Cf", "Cc"}:
-                    rel = path.relative_to(REPO)
-                    problems.append(f"{rel}:{lineno} hidden character U+{ord(char):04X}")
-                    break
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue  # binary asset
+        seen_lines = set()
+        lineno = 1
+        for char in text:
+            if char == "\n":
+                lineno += 1
+            elif char not in "\t\r" and unicodedata.category(char) in {"Cf", "Cc"} and lineno not in seen_lines:
+                seen_lines.add(lineno)
+                problems.append(f"{path.relative_to(REPO)}:{lineno} hidden character U+{ord(char):04X}")
     return problems
 
 
@@ -164,7 +176,7 @@ def main() -> int:
     nested = [p for p in skill.rglob("SKILL.md") if p != skill_md]
 
     problems = check_frontmatter(skill, text)
-    lines = text.count("\n") + 1
+    lines = len(text.splitlines())
     if lines >= 500:
         problems.append(f"SKILL.md is {lines} lines; keep it under 500")
     if nested:

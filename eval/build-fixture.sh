@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
 # Build the "Acme Shop" fixture project that fixtures-v3.md runs against.
 #
-#   bash eval/build-fixture.sh /path/to/new/dir
+#   bash eval/build-fixture.sh /path/to/new/dir   (refuses a non-empty directory)
 #
 # It is small on purpose: every file exists to give a fixture something true
 # to find by reading (a payments rule, a funnel with two drop-offs, 40 legacy
 # class names, a store with no tenant concept, a placeholder test).
 set -euo pipefail
 
-FX=${1:?usage: build-fixture.sh DIR}
-rm -rf "$FX" && mkdir -p "$FX" && cd "$FX"
+FX=${1:?usage: build-fixture.sh NEW-DIR}
+if [ -e "$FX" ] && [ -n "$(ls -A "$FX" 2>/dev/null)" ]; then
+  echo "build-fixture.sh: $FX exists and is not empty; pass a new directory" >&2
+  exit 1
+fi
+mkdir -p "$FX" && cd "$FX"
 git init -q -b main
 git config user.email fixture@example.com
 git config user.name "Fixture Dev"
