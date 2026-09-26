@@ -79,6 +79,15 @@ def normalize(line: str) -> list[str]:
     return TOKEN.findall(MARKUP.sub(" ", text))
 
 
+def add_line(words: list[tuple[str, int]], raw: str, lineno: int) -> None:
+    """Add a line's tokens, with a barrier where each pointer span was cut out."""
+    pieces = POINTER_SPAN.split(raw) if POINTER.search(raw) else [raw]
+    for number, piece in enumerate(pieces):
+        if number:
+            words.append((BARRIER, lineno))
+        words.extend((token, lineno) for token in normalize(piece))
+
+
 def tokenize(path: Path) -> list[tuple[str, int]]:
     """Return (token, line number) pairs, with barriers at every boundary.
 
@@ -95,17 +104,12 @@ def tokenize(path: Path) -> list[tuple[str, int]]:
             words.append((BARRIER, lineno))
         elif in_fence or not raw.strip():
             words.append((BARRIER, lineno))
-        elif POINTER.search(raw):
-            for number, piece in enumerate(POINTER_SPAN.split(raw)):
-                if number:
-                    words.append((BARRIER, lineno))
-                words.extend((token, lineno) for token in normalize(piece))
         elif HEADING.search(raw):
             words.append((BARRIER, lineno))
-            words.extend((token, lineno) for token in normalize(raw))
+            add_line(words, raw, lineno)
             words.append((BARRIER, lineno))
         else:
-            words.extend((token, lineno) for token in normalize(raw))
+            add_line(words, raw, lineno)
 
     return words
 

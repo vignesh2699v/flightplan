@@ -176,7 +176,8 @@ def main() -> int:
     nested = [p for p in skill.rglob("SKILL.md") if p != skill_md]
 
     problems = check_frontmatter(skill, text)
-    lines = len(text.splitlines())
+    # Count newlines, not splitlines(): form feeds and U+0085 are not line breaks here.
+    lines = text.count("\n") + (0 if text.endswith("\n") else 1)
     if lines >= 500:
         problems.append(f"SKILL.md is {lines} lines; keep it under 500")
     if nested:
