@@ -35,7 +35,7 @@ A single checkable outcome never gets a page; the evals showed a routed line bea
 One fenced block, so it copies cleanly, then a line of why:
 
 ```text
-Use /<skill-or-agent>[ on <model> at <effort> effort]. <Instruction, folding in the requirement and why it matters.> <Hard constraint, only when one applies.> Done = <criterion>. Tell me pass or fail.
+Use /<skill-or-agent>[ on <model> at <effort> effort]. <Instruction, folding in the requirement and why it matters.> <Hard constraint, only when one applies.> Done = <the result wanted, stated so it can pass or fail>. Tell me pass or fail.
 ```
 
 **Why:** <the pick, and its runner-up if the choice was close.>
