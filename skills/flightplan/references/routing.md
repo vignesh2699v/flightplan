@@ -23,6 +23,7 @@ Narrow before ranking: first by **stack and platform**, the highest-leverage fil
 
 When a plugin-scoped and a generic skill both match, prefer a project-scoped skill from the repository (among directory-scoped names, the one whose directory holds the ticket's files), then a more specific skill whose stack matches exactly, then the generic one, and say which rule decided.
 
+- The project's own documented route (a manifest script, a README or CLAUDE.md command) comes before an installed tool that does the same job; a tool wins only when that route can't run, and the ticket says why.
 - Match on description, not name; specific beats general.
 - Process comes before implementation.
 - Verification-shaped work goes to a subagent over a generic skill.

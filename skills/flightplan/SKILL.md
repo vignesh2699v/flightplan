@@ -52,7 +52,7 @@ Test the premise against what reading found, with the `grilling` skill if it's i
 
 ## Plan
 
-Split the work into tickets, each one checkable outcome, in dependency order; a real project lands at 5 to 15. Anything destructive, outward-facing or irreversible gets its own ticket that says so, since size alone doesn't isolate it. Per ticket, settle:
+Split the work into tickets, each one checkable outcome, in dependency order; a real project lands at 5 to 15. Anything destructive, outward-facing or irreversible gets its own ticket that says so, since size alone doesn't isolate it. Plan against what the code can do today: when a ticket needs something the project doesn't have yet, such as storage behind a stub, a test harness or an installed dependency, plan that first or flag it. Per ticket, settle:
 
 - **Capability**: at most one skill, subagent or MCP tool, chosen per `references/routing.md`; "none needed" is valid, and a second one needs a stated reason.
 - **Model and effort**: § Models.
