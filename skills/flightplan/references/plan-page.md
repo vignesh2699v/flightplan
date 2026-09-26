@@ -37,6 +37,7 @@ One JSON object per line. Strings stay on one line; escape `"` as `\"`, and writ
 {"kind":"plan","slug":"onboarding-redesign","title":"Onboarding Redesign","project":"github.com/acme/shop","outcome":"…","approach":"…","created":"2026-09-25"}
 {"kind":"context","field":"What this is","value":"…","source":"README, line 3"}
 {"kind":"flag","text":"…"}
+{"kind":"flag","text":"…","tech":true}
 {"kind":"ticket","id":"T-01","title":"…","why":"…","done":"…","tool":"/impeccable","beat":"…","model":"opus","effort":"medium","where":"session","guards":["Read-only"]}
 {"kind":"status","id":"T-01","status":"done","result":"…","evidence":"docs/audit.md","at":"2026-09-25"}
 {"kind":"url","url":"…"}
@@ -44,6 +45,7 @@ One JSON object per line. Strings stay on one line; escape `"` as `\"`, and writ
 ```
 
 - **plan**: `outcome` is one plain sentence on what done looks like; `approach` is two or three.
+- **flag**: something the reader should know or act on, in plain words. A note only a developer needs, such as a missing tool or token or the routing funnel, adds `"tech":true` and sits in a collapsed Technical notes section.
 - **context**: one line per field from SKILL.md § Read, in order, labelled with a capital first letter ("What this is"). A field reading couldn't settle has the value `not established`.
 - **ticket**: `title` starts with a verb. `why` is one sentence on what the ticket is for, in words someone who has never seen the code would follow. `tool` and `beat` name the pick and the runner-up it beat, with the reason; omit both when nothing is needed. Omit `effort` for `haiku`. `where` is `session` or `subagent`; `guards` lists applicable constraints in a few words each. IDs run `T-01` upward and never change, since records address tickets by ID; a ticket added or re-planned later is a new `ticket` line under its ID, and a re-planned ticket also gets a `pending` status line, since a `stale` status stays until one replaces it.
 - **status**: `pending` until a line says `live`, `done`, `failed`, or `stale` (a finding invalidated it). `result` is the sentence § Record in SKILL.md asks for, and `evidence` is a URL or path.

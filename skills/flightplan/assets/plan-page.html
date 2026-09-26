@@ -149,6 +149,7 @@
   .pill.stale::before { border-radius: 1px; transform: rotate(45deg); }
   .pill.failed { background: var(--fail-soft); color: var(--fail); }
   .pill.failed::before { border-radius: 0; }
+  .pill.later { background: transparent; border: 1px solid var(--rule); }
 
   /* flight strips: one row per ticket */
   .strips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -182,6 +183,8 @@
   .flags { margin: 18px 0 0; padding: 12px 14px; background: var(--attn-soft); border: 1px solid var(--attn); display: flex; flex-direction: column; gap: 6px; font-size: 15px; color: var(--ink); }
   .flags .label { font-size: 12px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--attn); }
   .approach { margin: 0 0 18px; max-width: 64ch; color: var(--ink-soft); }
+  details.tech { margin-top: 14px; }
+  .technotes { margin: 8px 0 0; padding-left: 18px; font-size: 14px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 4px; }
 
   /* how this page works */
   .how { border-top: 1px solid var(--rule); padding-top: 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px 28px; font-size: 14.5px; color: var(--ink-soft); }
@@ -229,6 +232,7 @@
     done: "Done",
     live: "Now",
     pending: "Up next",
+    later: "Later",
     stale: "Needs a new plan",
     failed: "Didn't pass"
   };
@@ -285,6 +289,8 @@
   });
 
   function stateOf(t) { return status[t.id] ? status[t.id].status : "pending"; }
+  var nextId = null;
+  function labelOf(t) { var st = stateOf(t); return st === "pending" && t.id !== nextId ? "later" : st; }
   function runsOn(t) {
     var m = MODELS[t.model] || (t.model ? t.model : "the session's current model");
     var where = t.where === "subagent" ? "in a helper agent" : "in this conversation";
@@ -317,6 +323,7 @@
   var firstStale = tickets.filter(function (t) { return stateOf(t) === "stale"; })[0];
   var firstFailed = tickets.filter(function (t) { return stateOf(t) === "failed"; })[0];
   var nextPending = tickets.filter(function (t) { return stateOf(t) === "pending"; })[0];
+  nextId = nextPending ? nextPending.id : null;
 
   if (plan.title) document.title = plan.title;
 
@@ -332,7 +339,7 @@
     var st = stateOf(t);
     var li = el("li", st);
     var dot = el("span", "wp " + st);
-    dot.title = t.id + " \u00b7 " + (t.title || "") + " \u00b7 " + (STATUS[st] || st);
+    dot.title = t.id + " \u00b7 " + (t.title || "") + " \u00b7 " + (STATUS[labelOf(t)] || st);
     dot.setAttribute("role", "img");
     dot.setAttribute("aria-label", dot.title);
     li.appendChild(dot);
@@ -442,7 +449,7 @@
     var sm = el("summary");
     sm.appendChild(el("span", "id", t.id));
     sm.appendChild(el("span", "title", t.title || t.id));
-    sm.appendChild(pill(st));
+    sm.appendChild(pill(labelOf(t)));
     if (t.why) sm.appendChild(el("span", "why", t.why));
     if (rec.result) {
       var r = el("span", "result");
@@ -504,11 +511,21 @@
     cl.appendChild(li);
   });
   bg.appendChild(cl);
-  if (flags.length) {
+  var plainFlags = flags.filter(function (x) { return !x.tech; });
+  var techFlags = flags.filter(function (x) { return x.tech; });
+  if (plainFlags.length) {
     var fl = el("div", "flags");
     fl.appendChild(el("span", "label", "Worth knowing"));
-    flags.forEach(function (x) { fl.appendChild(el("span", null, x.text)); });
+    plainFlags.forEach(function (x) { fl.appendChild(el("span", null, x.text)); });
     bg.appendChild(fl);
+  }
+  if (techFlags.length) {
+    var td = el("details", "inner tech");
+    td.appendChild(el("summary", null, "Technical notes (" + techFlags.length + ")"));
+    var tl = el("ul", "technotes");
+    techFlags.forEach(function (x) { tl.appendChild(el("li", null, x.text)); });
+    td.appendChild(tl);
+    bg.appendChild(td);
   }
   app.appendChild(bg);
 
