@@ -45,7 +45,7 @@ One JSON object per line. Strings stay on one line; escape `"` as `\"` and write
 
 - **plan**: `outcome` is one plain sentence on what done looks like; `approach` is two or three.
 - **context**: one line per field from SKILL.md § Read, in order, labelled with a capital first letter ("What this is"). A field reading couldn't settle has the value `not established`.
-- **ticket**: `title` starts with a verb. `why` says what the ticket is for, in words someone who has never seen the code would follow. `tool` and `beat` name the pick and the runner-up it beat, with the reason; omit both when nothing is needed. Omit `effort` for `haiku`. `where` is `session` or `subagent`; `guards` lists applicable constraints in a few words each. IDs run `T-01` upward and never change, since records address tickets by ID; a ticket added or re-planned later is a new `ticket` line under its ID.
+- **ticket**: `title` starts with a verb. `why` is one sentence on what the ticket is for, in words someone who has never seen the code would follow. `tool` and `beat` name the pick and the runner-up it beat, with the reason; omit both when nothing is needed. Omit `effort` for `haiku`. `where` is `session` or `subagent`; `guards` lists applicable constraints in a few words each. IDs run `T-01` upward and never change, since records address tickets by ID; a ticket added or re-planned later is a new `ticket` line under its ID.
 - **status**: `pending` until a line says `live`, `done`, `failed`, or `stale` (a finding invalidated it). `result` is one plain sentence on what came out of it; `evidence` is a URL or path.
 - **close**: `summary` is one sentence on what the plan produced.
 
