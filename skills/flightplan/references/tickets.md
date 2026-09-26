@@ -21,7 +21,7 @@ Write each paragraph as one unbroken line; a paste box only reflows text without
 
 ## Self-invocation
 
-Pasted text can't trigger a slash command, so a ticket that names a skill opens with this line, verbatim:
+Pasted text can't trigger a slash command, so a ticket whose main work uses a skill opens with this line, verbatim. A review sub-step names its own skill where it runs instead.
 
 ```text
 Load /<skill> with the Skill tool before you start; the name is an instruction to you, not decoration.
@@ -68,4 +68,4 @@ The review is the ticket's last numbered sub-step: `/code-review` at the ticket'
 
 ## Plan deliverables
 
-A ticket whose output is a plan or spec (Plan Mode, `/superpowers:writing-plans`, "make a plan for X") publishes it with the Artifact tool at its own URL, separate from the plan page, using an installed commentable-preview mechanism when there is one. Otherwise each block-level section gets `class="commentable"` and a unique `data-id`, plus a Revise action that collects comments and redeploys to the same URL.
+A ticket whose output is a plan or spec (Plan Mode, `/superpowers:writing-plans`, "make a plan for X") publishes it with the Artifact tool at its own URL, separate from the plan page, using an installed skill or tool for commentable documents when there is one. Otherwise each block-level section gets `class="commentable"` and a unique `data-id`, plus a Revise action that collects comments and redeploys to the same URL.

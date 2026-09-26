@@ -14,7 +14,7 @@ A plan is one self-contained HTML file copied from `assets/plan-page.html` in th
 
 ## Create
 
-1. Copy the template to the plan's path, creating the directory if needed.
+1. Copy the template (its path is in SKILL.md § Plan) to the plan's path, creating the directory if needed.
 2. Replace `<title>Untitled plan</title>` with the plan's title, and the line `{"kind":"plan","placeholder":true}` with the data lines: plan, the five context fields, flags, tickets.
 3. Publish with the Artifact tool: title is the slug in Title Case, which identifies the plan later; icon `plan`; description is the outcome in one sentence.
 4. Append a `url` line with the returned URL, so later sessions redeploy without searching; it goes out with the next republish.

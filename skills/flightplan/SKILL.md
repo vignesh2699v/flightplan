@@ -2,6 +2,7 @@
 name: flightplan
 description: Plans a piece of work before it starts and hands it over one checkable ticket at a time. Reads the project, tests the premise with at most four questions, then files a live plan page anyone can follow; each ticket gets the best installed skill, subagent or MCP tool and a prompt written for the model and effort it should run on. Use when the user runs /flightplan, asks to plan, scope, kick off, break down or sequence work, or wants to resume a plan, even without saying plan. A single small ask gets one routed line instead. Never does the work itself.
 license: MIT
+allowed-tools: Read(~/.claude/flightplan/**) Edit(~/.claude/flightplan/**)
 compatibility: Built for Claude Code. Uses the Skill, Agent, AskUserQuestion and Artifact tools when present, and falls back to plain text and a local HTML page when they are not.
 metadata:
   version: "3.0"
@@ -47,7 +48,7 @@ Establish five context fields: what this is, who it's for, what exists now, what
 
 ## Grill
 
-Test the premise against what reading found, with the `grilling` skill if it's installed, otherwise inline. At most four questions, in one round of AskUserQuestion where available, only on gaps reading couldn't close; offer the likely answers reading turned up as options, and spend the questions first on success and scope, which reading rarely settles. When reading covered everything, ask nothing and say so. Never plan work around a guessed target: when the target is unclear, asking is the step. Note which assumption is costliest to get wrong: it decides which ticket, if any, gets more effort.
+Test the premise against what reading found, with the `grilling` skill if it's installed, otherwise inline. At most four questions, in one round (AskUserQuestion where available, numbered options otherwise), only on gaps reading couldn't close; offer the likely answers reading turned up as options, and spend the questions first on success and scope, which reading rarely settles. When reading covered everything, ask nothing and say so. Never plan work around a guessed target: when the target is unclear, asking is the step. Note which assumption is costliest to get wrong: it decides which ticket, if any, gets more effort.
 
 ## Plan
 
@@ -58,11 +59,11 @@ Split the work into tickets, each one checkable outcome, in dependency order; a 
 - **Where it runs**: this session by default, since it holds the context; a subagent when the ticket is self-contained and suits a smaller model, or is verification-shaped.
 - **Done =**: reportable as pass or fail.
 
-Create the page (`references/plan-page.md` § Create) and give the user its link with one line: the outcome, the ticket count, and how many picks are contested.
+Create the page from `${CLAUDE_SKILL_DIR}/assets/plan-page.html`, the template in this skill's `assets` folder (`references/plan-page.md` § Create). Give the user its link in a short message: the outcome, the ticket count, how many picks are contested, and any flag they must act on.
 
 ## Approve
 
-Put the contested picks to the user in one round of AskUserQuestion, top pick marked "(Recommended)". A call holds four questions, so a fifth contested pick takes a second call; that's the tool's limit, not a judgement. Uncontested picks aren't asked about; the page shows each pick and what it beat. Without AskUserQuestion, list numbered options with the default marked. Until the user says go, change the page in place.
+Put the contested picks to the user in one round of AskUserQuestion, top pick marked "(Recommended)". A call holds four questions, so a fifth contested pick takes a second call; that's the tool's limit, not a judgement. Uncontested picks aren't asked about; the page shows each pick and what it beat. Without AskUserQuestion, list numbered options with the default marked. When nothing is contested, say so and ask for go. Until the user says go, change the page in place.
 
 ## Serve
 
@@ -72,7 +73,7 @@ Then tell the user in two lines at most which ticket is live and where to copy i
 
 ## Record
 
-Runs in the session that just did a ticket. Append its status (`done`, or `failed` when the done-criterion wasn't met), one plain sentence on what came out of it, and the evidence's link or path (`references/plan-page.md` § Update). If the work went off-plan, say so there and mark each later ticket `stale` without rewriting it; an approved plan changes only when the user is asked. Tell the user pass or fail, then § Serve the next ticket in the same turn, or after the last one, close the plan with one sentence on what it produced.
+Runs in the session that just did a ticket. Append its status (`done`, or `failed` when the done-criterion wasn't met), one plain sentence on what came out of it, and the evidence's link or path (`references/plan-page.md` § Update). If the work went off-plan, say so there and mark each later ticket `stale` without rewriting it; an approved plan changes only when the user is asked. Tell the user pass or fail, then § Serve the next ticket in the same turn, or after the last one, close the plan with one sentence on what it produced. When the ticket's deliverable needs the user's sign-off before later work builds on it, such as a spec, a design or a plan, ask for that sign-off instead and serve once it's given.
 
 ## Resume
 
@@ -89,7 +90,9 @@ Name models by alias (`haiku`, `sonnet`, `opus`, `fable`) so tags outlive releas
 | Multi-file change, unknown cause, design judgement, review | `opus` | `medium`; `high` on the costliest-assumption ticket |
 | Hardest, longest, most ambiguous: architecture, security, money | `fable` if available, else `opus` | `high`; `xhigh` or `max` only when correctness outweighs cost |
 
-Changing model or effort mid-session resets the prompt cache, and the next turn re-reads the whole conversation at full price. So run a ticket on the session's own model whenever it is at least the one the table names (the order is `haiku`, `sonnet`, `opus`, `fable`), switch up only when the ticket needs more, and go smaller only through a subagent, which binds its own model without touching this session. A pure clarification runs at `low`. Raise effort one rung at a time, only for what the ticket itself costs to get wrong.
+Changing model or effort mid-session resets the prompt cache, and the next turn re-reads the whole conversation at full price. So run a ticket on the session's own model whenever it is at least the one the table names (the order is `haiku`, `sonnet`, `opus`, `fable`), switch up only when the ticket needs more, and go smaller only through a subagent, which binds its own model without touching this session. Without a subagent to hand it to, a ticket that suits a smaller model runs on the session's model and is tagged that way. Tag `fable` only when the session shows it's available; otherwise tag `opus` and flag that `fable` would suit it.
+
+This session runs at `${CLAUDE_EFFORT}` effort (unknown if that reads as a placeholder). Effort follows the same cache rule: ask for a change only when a ticket needs more than the session runs at, never to save a little on one ticket; if the session runs well above what the remaining tickets need, suggest one change for the rest of the plan. A pure clarification runs at `low`. Raise effort one rung at a time, only for what the ticket itself costs to get wrong.
 
 ## Standing rules
 
