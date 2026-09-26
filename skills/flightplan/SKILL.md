@@ -57,7 +57,7 @@ Split the work into tickets, each one checkable outcome, in dependency order; a 
 - **Capability**: at most one skill, subagent or MCP tool, chosen per `references/routing.md`; "none needed" is valid, and a second one needs a stated reason.
 - **Model and effort**: § Models.
 - **Where it runs**: this session by default, since it holds the context; a subagent when the ticket is self-contained and suits a smaller model, or is verification-shaped.
-- **Done =**: reportable as pass or fail.
+- **Done =**: reportable as pass or fail. When later work builds on the ticket's deliverable, such as a spec, a design or a plan, the user's sign-off is part of it.
 
 Create the page from `${CLAUDE_SKILL_DIR}/assets/plan-page.html`, the template in this skill's `assets` folder (`references/plan-page.md` § Create). Give the user its link in a short message: the outcome, the ticket count, how many picks are contested, and any flag they must act on.
 
@@ -73,7 +73,7 @@ Then tell the user in two lines at most which ticket is live and where to copy i
 
 ## Record
 
-Runs in the session that just did a ticket. Append its status (`done`, or `failed` when the done-criterion wasn't met), one plain sentence on what came out of it, and the evidence's link or path (`references/plan-page.md` § Update). If the work went off-plan, say so there and mark each later ticket `stale` without rewriting it; an approved plan changes only when the user is asked. Tell the user pass or fail, then § Serve the next ticket in the same turn, or after the last one, close the plan with one sentence on what it produced. When the ticket's deliverable needs the user's sign-off before later work builds on it, such as a spec, a design or a plan, ask for that sign-off instead and serve once it's given.
+Runs in the session that just did a ticket. Append its status (`done`, or `failed` when the done-criterion wasn't met), one plain sentence on what came out of it, and the evidence's link or path (`references/plan-page.md` § Update). Met in substance but not to the letter counts as `done`, with the gap named in that sentence. If the work went off-plan, say so there and mark each later ticket `stale` without rewriting it; an approved plan changes only when the user is asked. Tell the user pass or fail, then § Serve the next ticket in the same turn, or after the last one, close the plan with one sentence on what it produced. Two cases wait for the user instead: a done-criterion that includes their sign-off, where you serve once it's given, and a `failed` ticket, where you ask whether to retry it, re-served against what the failed run found, or re-plan.
 
 ## Resume
 
