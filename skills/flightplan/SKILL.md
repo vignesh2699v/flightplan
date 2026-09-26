@@ -73,7 +73,13 @@ Then tell the user in two lines at most which ticket is live and where to copy i
 
 ## Record
 
-Runs in the session that just did a ticket. Append its status (`done`, or `failed` when the done-criterion wasn't met), one plain sentence on what came out of it, and the evidence's link or path (`references/plan-page.md` § Update). Met in substance but not to the letter counts as `done`, with the gap named in that sentence. If the work went off-plan, say so there and mark each later ticket `stale` without rewriting it; an approved plan changes only when the user is asked. Tell the user pass or fail, then § Serve the next ticket in the same turn, or after the last one, close the plan with one sentence on what it produced. Two cases wait for the user instead: a done-criterion that includes their sign-off, where you serve once it's given, and a `failed` ticket, where you ask whether to retry it, re-served against what the failed run found, or re-plan.
+Runs in the session that just did a ticket. Judge the done-criterion part by part: it passes only when every part is met. Record the outcome on the page (`references/plan-page.md` § Update): the status the verdict below settles, one plain sentence on what came out of it, and the evidence's link or path. If the work went off-plan, say so there and mark each later ticket `stale` without rewriting it; an approved plan changes only when the user is asked.
+
+Then give the user the verdict. On a pass, record `done` and § Serve the next ticket in the same turn, or after the last one, close the plan with one sentence on what it produced. Three cases wait for the user instead:
+
+- **Short on a part the next ticket can absorb**: name the part and ask whether to carry it forward, the default, or retry. Record `done` with the gap named if they carry it, `failed` if they retry.
+- **Failed outright**: record `failed` and ask whether to retry it, re-served against what the failed run found, or re-plan.
+- **Needs their sign-off**, because the done-criterion includes it: serve once it's given.
 
 ## Resume
 
