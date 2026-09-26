@@ -44,7 +44,7 @@ Pick the capability from the session's listing by what its description says it d
 
 ## Read
 
-Establish five context fields: what this is, who it's for, what exists now, what success looks like, what's out of scope. Take them from memory, the git log, README, CLAUDE.md or AGENTS.md, the manifest, the code, and a connected issue tracker when the ask points at an issue, issuing these independent reads together in one turn. Note each field's source, so a wrong inference is caught in seconds. Infer rather than ask: a question reading could have answered is the failure this step exists to prevent.
+Establish five context fields: what this is, who it's for, what exists now, what success looks like, what's out of scope. Take them from memory, the git log, README, CLAUDE.md or AGENTS.md, the manifest, the code, and a connected issue tracker when the ask points at an issue, issuing these independent reads together in one turn. Note each field's source, so a wrong inference is caught in seconds, and treat what comments and docs claim as leads to confirm in the code rather than facts. Infer rather than ask: a question reading could have answered is the failure this step exists to prevent.
 
 ## Grill
 
