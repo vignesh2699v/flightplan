@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Fail when a rule is stated in more than one place.
 
-Three files describe one system, and each owns a different job:
+Several files describe one system, and each owns a different job:
 
-    skills/flightplan/SKILL.md                   imperative pipeline steps
-    skills/flightplan/reference/mechanics.md     mechanics, strings, templates
+    skills/flightplan/SKILL.md                   the paths and pipeline steps
+    skills/flightplan/references/*.md            mechanics, strings, templates
     docs/design-notes.md                         rationale
 
 Any rule written into two of them will drift apart, and this one has three
@@ -18,8 +18,10 @@ the bug:
 
   fenced code blocks      a template and an example of it filled in are
                           supposed to match; that is not drift
-  cross-reference lines   a line naming another file, or a section with a
-                          section mark, is a pointer -- pointers are the fix
+  cross-references        a file name or a section mark, with the section it
+                          names, is a pointer -- pointers are the fix, so
+                          that span is skipped and the rest of its line
+                          is still checked
   paragraph and heading   spans never merge across a blank line or a
   boundaries              heading, so unrelated neighbours can't collide
 
@@ -43,7 +45,10 @@ REPO = Path(__file__).resolve().parents[1]
 
 SOURCES = (
     "skills/flightplan/SKILL.md",
-    "skills/flightplan/reference/mechanics.md",
+    *sorted(
+        str(path.relative_to(REPO))
+        for path in (REPO / "skills/flightplan/references").glob("*.md")
+    ),
     "docs/design-notes.md",
 )
 
@@ -54,7 +59,13 @@ DEFAULT_SHINGLE = 8
 # paragraph, heading, fence and pointer boundaries stay un-crossable.
 BARRIER = "\x00"
 
-POINTER = re.compile(r"mechanics\.md|SKILL\.md|design-notes\.md|§")
+POINTER = re.compile(r"references/|SKILL\.md|design-notes\.md|§")
+# The pointer itself: a file name, optionally with the section it names.
+# Only this span is exempt; the rest of the line is still checked, because a
+# skill paragraph is one long line and exempting all of it hid real copies.
+POINTER_SPAN = re.compile(
+    r"`?(?:references/[\w.-]+|SKILL\.md|design-notes\.md)`?(?:\s*§\s*[^,.;:()`]+)?|§\s*[^,.;:()`]+"
+)
 HEADING = re.compile(r"^\s{0,3}#{1,6}\s")
 LINK = re.compile(r"\[([^\]]*)\]\([^)]*\)")
 MARKUP = re.compile(r"[`*_>|#\[\]()]+")
@@ -66,6 +77,15 @@ def normalize(line: str) -> list[str]:
     """Reduce a line to comparable word tokens, markdown stripped."""
     text = LINK.sub(r"\1", line.lower())
     return TOKEN.findall(MARKUP.sub(" ", text))
+
+
+def add_line(words: list[tuple[str, int]], raw: str, lineno: int) -> None:
+    """Add a line's tokens, with a barrier where each pointer span was cut out."""
+    pieces = POINTER_SPAN.split(raw) if POINTER.search(raw) else [raw]
+    for number, piece in enumerate(pieces):
+        if number:
+            words.append((BARRIER, lineno))
+        words.extend((token, lineno) for token in normalize(piece))
 
 
 def tokenize(path: Path) -> list[tuple[str, int]]:
@@ -82,14 +102,14 @@ def tokenize(path: Path) -> list[tuple[str, int]]:
         if raw.lstrip().startswith("```"):
             in_fence = not in_fence
             words.append((BARRIER, lineno))
-        elif in_fence or not raw.strip() or POINTER.search(raw):
+        elif in_fence or not raw.strip():
             words.append((BARRIER, lineno))
         elif HEADING.search(raw):
             words.append((BARRIER, lineno))
-            words.extend((token, lineno) for token in normalize(raw))
+            add_line(words, raw, lineno)
             words.append((BARRIER, lineno))
         else:
-            words.extend((token, lineno) for token in normalize(raw))
+            add_line(words, raw, lineno)
 
     return words
 
@@ -247,7 +267,7 @@ def report(findings: list[dict], size: int) -> None:
 
     print(
         "State each rule once, in the file that owns it, and point at it from\n"
-        "the others -- a line naming another file is exempt. Repetition that\n"
+        "the others -- the pointer itself is exempt. Repetition that\n"
         f"is genuinely intended goes in {ALLOWLIST}, with a reason."
     )
 

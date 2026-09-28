@@ -1,5 +1,9 @@
 # Evaluation fixtures
 
+> From v3.0, releases are measured on [`fixtures-v3.md`](fixtures-v3.md), which
+> runs against a real fixture project. This file is kept unchanged as the
+> baseline for the v1 results that cite it.
+
 Ten raw prompts spanning the shapes `rebuild-prompt` handles differently.
 Written 2026-08-02 for the first baseline-vs-skill comparison
 (`2026-08-02-v1.11-results.md`). Reuse these unchanged for future comparisons

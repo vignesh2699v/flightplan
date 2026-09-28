@@ -1,6 +1,77 @@
 # Changelog
 
-This file mirrors the [GitHub releases](https://github.com/vignesh2699v/claude-flightplan/releases) for this repo. Every future release is appended here as well as published there.
+This file mirrors the [GitHub releases](https://github.com/vignesh2699v/flightplan/releases) for this repo. Every future release is appended here as well as published there.
+
+## v3.0 — prompts written for their model, a page anyone can follow, ready for the directory
+
+**Measured against v2.1 before release.** v2.0 and v2.1 had never been
+through a fixture run. This release adds a fixture project and five
+fixtures for the plan-and-ticket contract, and runs both versions on them
+with blind grading ([results](eval/2026-09-26-v3.0-results.md)). v3 won all
+five cases, passed 35 of 36 assertions against v2.1's 29, used 15% fewer
+tokens and finished 22% faster. A judge reading both plan pages as a
+non-technical shop owner scored v3's 30 of 30 and v2.1's 16. The first
+draft lost the no-target case; that's fixed and was re-graded.
+
+**Each ticket is written for the model that runs it.** Haiku gets exact
+files and an example; Sonnet gets its scope stated outright, because it
+follows instructions literally; Opus gets the goal and constraints and no
+request to double-check, which makes it over-verify; Fable gets the reason
+and the boundaries instead of a step-by-step script. All of it follows
+Anthropic's current guidance for each model (`references/tickets.md`).
+
+**Models by alias, read from the session, and cache-aware.** The dated
+model table and the "ask which models you have" default are gone. Tickets
+name `haiku`, `sonnet`, `opus` or `fable`, and effort per model: Haiku has
+none, and Opus 5.5 defaults to `medium`. Because changing model or effort
+mid-session resets the prompt cache, a ticket stays on the session's model
+when that's enough; smaller models are reached through a subagent. The
+session's own effort comes from `${CLAUDE_EFFORT}`.
+
+**The plan page is a template plus a log.** The page ships once in
+`assets/plan-page.html`, and a plan only appends one-line JSON records, so
+no run writes HTML: v2.1 wrote 34–46 KB of it per plan. Every step says what
+it's for and what came out of it in plain words, the next action and its
+prompt sit at the top, and developer-only notes fold away. When the Artifact
+tool is missing, the local file is the page.
+
+**Recording goes through the skill.** Each ticket ends by invoking
+`/flightplan record T-NN`, which judges the done-criterion part by part,
+appends the result, and serves the next ticket in the same turn. The v2.1
+cycle took two more user turns. Failures, gaps and sign-offs wait for the
+user instead.
+
+**Ready for skills.sh.** The frontmatter now holds only the Agent Skills
+fields and passes `skills-ref validate`. `reference/` is renamed to
+`references/`. Four zero-width spaces, which scanners flag as hidden
+Unicode, are gone. `npx skills add vignesh2699v/flightplan` installs every
+file, and the README's install line now points at this repository.
+`scripts/check-skill.py` checks frontmatter, size, hidden characters,
+pointers and the template before a release.
+
+**Found and fixed on the way:**
+
+- A leftover v1 rule told the skill to deliver a ticket before asking
+  anything, contradicting its own questions step.
+- SKILL.md pointed at `docs/design-notes.md`, which isn't shipped with the
+  skill.
+- The routing history moved to `~/.claude/flightplan/history.md`; the old
+  path is still read.
+- An independent code review found nine more problems, including a git
+  token that could reach the published page and a duplication lint that
+  skipped a quarter of SKILL.md. All nine are fixed.
+
+**Known gaps:**
+
+- One run per fixture, so no variance check.
+- The Haiku-subagent route and Artifact-tool recovery were never
+  exercised.
+- The skill text loaded on the planning path is 29% longer than v2.1's,
+  because the evaluation's fixes added words. Whole runs still cost less.
+- The description's triggering was not optimized here. To run the
+  skill-creator's trigger loop locally, from the skill-creator skill's
+  directory:
+  `python -m scripts.run_loop --eval-set <this repo>/eval/trigger-queries.json --skill-path <this repo>/skills/flightplan --model <your model> --max-iterations 5`.
 
 ## v2.1 — accordion tickets, outcomes behind an overlay
 

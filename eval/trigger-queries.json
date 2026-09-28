@@ -1,0 +1,22 @@
+[
+  {"query": "/flightplan migrate our billing from Stripe Checkout to Payment Elements", "should_trigger": true},
+  {"query": "ok before i start on the dashboard rewrite can you plan it out properly, i keep losing track halfway through these things", "should_trigger": true},
+  {"query": "we need to move the whole app from the pages router to the app router over the next two weeks. break it into steps i can work through one at a time", "should_trigger": true},
+  {"query": "kick off the accessibility overhaul for checkout: audit it, fix what you find, check it with a screen reader, then ship", "should_trigger": true},
+  {"query": "pick up where we left off on the onboarding plan", "should_trigger": true},
+  {"query": "scope out adding SSO (SAML with Okta) to the admin panel. I don't want anyone coding until we know the steps and who does what", "should_trigger": true},
+  {"query": "I have hundreds of skills installed and never know which one to use. plan the marketing site redesign and tell me which skill fits each part", "should_trigger": true},
+  {"query": "sequence the work to pull auth out of our monolith into its own service; I want tickets I can hand to Claude one at a time", "should_trigger": true},
+  {"query": "set up the plan for the Q4 performance push: find the slow pages, fix the worst three, prove it with before and after numbers", "should_trigger": true},
+  {"query": "break down 'make the mobile app work offline' into checkable steps and tell me which model to run each one on", "should_trigger": true},
+  {"query": "what's the difference between plan mode and just asking you to make a plan?", "should_trigger": false},
+  {"query": "fix the typo in the README title, it says 'Stroefront'", "should_trigger": false},
+  {"query": "write a two-page project plan for the board meeting next week as a word doc, covering budget, timeline and risks", "should_trigger": false},
+  {"query": "run pnpm test and tell me what fails", "should_trigger": false},
+  {"query": "explain how state management works in this repo, I'm new here", "should_trigger": false},
+  {"query": "review PR 482 for security issues before we merge it", "should_trigger": false},
+  {"query": "turn our roadmap into a gantt chart in excel, quarters across the top", "should_trigger": false},
+  {"query": "which Claude model should our support bot use to summarize tickets through the API, cost matters", "should_trigger": false},
+  {"query": "create a new skill that writes our commit messages in conventional-commits format", "should_trigger": false},
+  {"query": "summarize what we changed in this session so I can paste it into slack", "should_trigger": false}
+]
